@@ -1,4 +1,3 @@
-```tsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -17,7 +16,7 @@ import {
   RefreshCw,
   X,
 } from "lucide-react";
-import axiosInstance from "../../api/axios";
+import axiosInstance from "../api/axios";
 
 // =========================================================
 // TYPES
@@ -82,15 +81,11 @@ const MyVehicles: React.FC = () => {
 
   const [category, setCategory] = useState<string>("All");
 
-  const [deleteLoading, setDeleteLoading] = useState<string | null>(
-    null
-  );
+  const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
 
-  const [showDeleteModal, setShowDeleteModal] =
-    useState<boolean>(false);
+  const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
 
-  const [vehicleToDelete, setVehicleToDelete] =
-    useState<Vehicle | null>(null);
+  const [vehicleToDelete, setVehicleToDelete] = useState<Vehicle | null>(null);
 
   // =========================================================
   // FETCH VEHICLES
@@ -110,10 +105,7 @@ const MyVehicles: React.FC = () => {
       console.log("My vehicles response:", response.data);
 
       const data =
-        response.data?.vehicles ||
-        response.data?.data ||
-        response.data ||
-        [];
+        response.data?.vehicles || response.data?.data || response.data || [];
 
       setVehicles(Array.isArray(data) ? data : []);
     } catch (err: any) {
@@ -122,7 +114,7 @@ const MyVehicles: React.FC = () => {
       setError(
         err?.response?.data?.message ||
           err?.message ||
-          "Failed to load your vehicles."
+          "Failed to load your vehicles.",
       );
 
       setVehicles([]);
@@ -136,11 +128,7 @@ const MyVehicles: React.FC = () => {
   // =========================================================
 
   const getVehicleImage = (vehicle: Vehicle): string => {
-    const images =
-      vehicle.images ||
-      vehicle.photos ||
-      vehicle.imageUrls ||
-      [];
+    const images = vehicle.images || vehicle.photos || vehicle.imageUrls || [];
 
     if (Array.isArray(images) && images.length > 0) {
       return images[0];
@@ -218,8 +206,7 @@ const MyVehicles: React.FC = () => {
 
       const location = (vehicle.location || "").toLowerCase();
 
-      const vehicleCategory =
-        (vehicle.category || "").toLowerCase();
+      const vehicleCategory = (vehicle.category || "").toLowerCase();
 
       const matchesSearch =
         !searchValue ||
@@ -230,8 +217,7 @@ const MyVehicles: React.FC = () => {
         vehicleCategory.includes(searchValue);
 
       const matchesCategory =
-        category === "All" ||
-        vehicle.category === category;
+        category === "All" || vehicle.category === category;
 
       return matchesSearch && matchesCategory;
     });
@@ -265,15 +251,10 @@ const MyVehicles: React.FC = () => {
     try {
       setDeleteLoading(vehicleToDelete._id);
 
-      await axiosInstance.delete(
-        `/vehicles/${vehicleToDelete._id}`
-      );
+      await axiosInstance.delete(`/vehicles/${vehicleToDelete._id}`);
 
       setVehicles((previous) =>
-        previous.filter(
-          (vehicle) =>
-            vehicle._id !== vehicleToDelete._id
-        )
+        previous.filter((vehicle) => vehicle._id !== vehicleToDelete._id),
       );
 
       closeDeleteModal();
@@ -283,7 +264,7 @@ const MyVehicles: React.FC = () => {
       setError(
         err?.response?.data?.message ||
           err?.message ||
-          "Failed to delete vehicle."
+          "Failed to delete vehicle.",
       );
     } finally {
       setDeleteLoading(null);
@@ -294,9 +275,7 @@ const MyVehicles: React.FC = () => {
   // PRICE
   // =========================================================
 
-  const formatPrice = (
-    price: number | string | undefined
-  ): string => {
+  const formatPrice = (price: number | string | undefined): string => {
     const numericPrice = Number(price);
 
     if (Number.isNaN(numericPrice)) {
@@ -316,9 +295,7 @@ const MyVehicles: React.FC = () => {
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
 
-          <p className="text-gray-600">
-            Loading your vehicles...
-          </p>
+          <p className="text-gray-600">Loading your vehicles...</p>
         </div>
       </div>
     );
@@ -331,13 +308,11 @@ const MyVehicles: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="max-w-7xl mx-auto">
-
         {/* =====================================================
             HEADER
         ====================================================== */}
 
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-
           <div>
             <div className="flex items-center gap-3">
               <div className="p-3 bg-blue-100 rounded-xl">
@@ -358,9 +333,7 @@ const MyVehicles: React.FC = () => {
 
           <button
             type="button"
-            onClick={() =>
-              navigate("/owner/vehicles/create")
-            }
+            onClick={() => navigate("/owner/vehicles/create")}
             className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-lg font-medium transition"
           >
             <Plus className="w-5 h-5" />
@@ -377,13 +350,9 @@ const MyVehicles: React.FC = () => {
             <AlertCircle className="w-5 h-5 mt-0.5 shrink-0" />
 
             <div className="flex-1">
-              <p className="font-medium">
-                Something went wrong
-              </p>
+              <p className="font-medium">Something went wrong</p>
 
-              <p className="text-sm mt-1">
-                {error}
-              </p>
+              <p className="text-sm mt-1">{error}</p>
             </div>
 
             <button
@@ -401,14 +370,11 @@ const MyVehicles: React.FC = () => {
         ====================================================== */}
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-
           {/* Total */}
           <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">
-                  Total Vehicles
-                </p>
+                <p className="text-sm text-gray-500">Total Vehicles</p>
 
                 <p className="text-2xl font-bold text-gray-900 mt-1">
                   {vehicles.length}
@@ -425,15 +391,12 @@ const MyVehicles: React.FC = () => {
           <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">
-                  Available
-                </p>
+                <p className="text-sm text-gray-500">Available</p>
 
                 <p className="text-2xl font-bold text-green-600 mt-1">
                   {
-                    vehicles.filter((vehicle) =>
-                      isVehicleAvailable(vehicle)
-                    ).length
+                    vehicles.filter((vehicle) => isVehicleAvailable(vehicle))
+                      .length
                   }
                 </p>
               </div>
@@ -448,16 +411,12 @@ const MyVehicles: React.FC = () => {
           <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">
-                  Unavailable
-                </p>
+                <p className="text-sm text-gray-500">Unavailable</p>
 
                 <p className="text-2xl font-bold text-red-600 mt-1">
                   {
-                    vehicles.filter(
-                      (vehicle) =>
-                        !isVehicleAvailable(vehicle)
-                    ).length
+                    vehicles.filter((vehicle) => !isVehicleAvailable(vehicle))
+                      .length
                   }
                 </p>
               </div>
@@ -475,7 +434,6 @@ const MyVehicles: React.FC = () => {
 
         <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm mb-6">
           <div className="flex flex-col md:flex-row gap-4">
-
             {/* Search */}
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -483,9 +441,7 @@ const MyVehicles: React.FC = () => {
               <input
                 type="text"
                 value={search}
-                onChange={(e) =>
-                  setSearch(e.target.value)
-                }
+                onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by vehicle, brand, model or location..."
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
@@ -497,16 +453,11 @@ const MyVehicles: React.FC = () => {
 
               <select
                 value={category}
-                onChange={(e) =>
-                  setCategory(e.target.value)
-                }
+                onChange={(e) => setCategory(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg bg-white outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {categories.map((item) => (
-                  <option
-                    key={item}
-                    value={item}
-                  >
+                  <option key={item} value={item}>
                     {item}
                   </option>
                 ))}
@@ -521,9 +472,7 @@ const MyVehicles: React.FC = () => {
               title="Refresh vehicles"
             >
               <RefreshCw className="w-5 h-5" />
-              <span className="md:hidden">
-                Refresh
-              </span>
+              <span className="md:hidden">Refresh</span>
             </button>
           </div>
         </div>
@@ -552,7 +501,6 @@ const MyVehicles: React.FC = () => {
 
         {filteredVehicles.length === 0 ? (
           <div className="bg-white border border-gray-200 rounded-xl shadow-sm py-16 px-6 text-center">
-
             <div className="mx-auto w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-5">
               <Car className="w-10 h-10 text-gray-400" />
             </div>
@@ -564,18 +512,13 @@ const MyVehicles: React.FC = () => {
                 </h2>
 
                 <p className="text-gray-500 mt-2 max-w-md mx-auto">
-                  You haven't added any vehicles yet.
-                  Add your first vehicle to start renting
-                  it out.
+                  You haven't added any vehicles yet. Add your first vehicle to
+                  start renting it out.
                 </p>
 
                 <button
                   type="button"
-                  onClick={() =>
-                    navigate(
-                      "/owner/vehicles/create"
-                    )
-                  }
+                  onClick={() => navigate("/owner/vehicles/create")}
                   className="mt-6 inline-flex items-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition"
                 >
                   <Plus className="w-5 h-5" />
@@ -589,8 +532,7 @@ const MyVehicles: React.FC = () => {
                 </h2>
 
                 <p className="text-gray-500 mt-2">
-                  Try changing your search or category
-                  filter.
+                  Try changing your search or category filter.
                 </p>
 
                 <button
@@ -612,28 +554,22 @@ const MyVehicles: React.FC = () => {
           ==================================================== */
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-
             {filteredVehicles.map((vehicle) => {
-              const available =
-                isVehicleAvailable(vehicle);
+              const available = isVehicleAvailable(vehicle);
 
               return (
                 <div
                   key={vehicle._id}
                   className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition"
                 >
-
                   {/* Image */}
                   <div className="relative h-56 bg-gray-100">
-
                     <img
                       src={getVehicleImage(vehicle)}
                       alt={getVehicleName(vehicle)}
                       className="w-full h-full object-cover"
                       onError={(e) => {
-                        (
-                          e.currentTarget as HTMLImageElement
-                        ).src =
+                        (e.currentTarget as HTMLImageElement).src =
                           "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=900&q=80";
                       }}
                     />
@@ -647,9 +583,7 @@ const MyVehicles: React.FC = () => {
                             : "bg-red-100 text-red-700"
                         }`}
                       >
-                        {available
-                          ? "Available"
-                          : "Unavailable"}
+                        {available ? "Available" : "Unavailable"}
                       </span>
                     </div>
 
@@ -665,7 +599,6 @@ const MyVehicles: React.FC = () => {
 
                   {/* Content */}
                   <div className="p-5">
-
                     {/* Name */}
                     <div className="mb-4">
                       <h2 className="text-xl font-bold text-gray-900 truncate">
@@ -674,24 +607,19 @@ const MyVehicles: React.FC = () => {
 
                       {vehicle.year && (
                         <p className="text-sm text-gray-500 mt-1">
-                          {vehicle.brand}{" "}
-                          {vehicle.model} •{" "}
-                          {vehicle.year}
+                          {vehicle.brand} {vehicle.model} • {vehicle.year}
                         </p>
                       )}
                     </div>
 
                     {/* Details */}
                     <div className="grid grid-cols-2 gap-3 mb-4">
-
                       {/* Fuel */}
                       {vehicle.fuelType && (
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                           <Fuel className="w-4 h-4 text-blue-500" />
 
-                          <span>
-                            {vehicle.fuelType}
-                          </span>
+                          <span>{vehicle.fuelType}</span>
                         </div>
                       )}
 
@@ -700,9 +628,7 @@ const MyVehicles: React.FC = () => {
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                           <Users className="w-4 h-4 text-blue-500" />
 
-                          <span>
-                            {vehicle.seats} Seats
-                          </span>
+                          <span>{vehicle.seats} Seats</span>
                         </div>
                       )}
 
@@ -722,25 +648,18 @@ const MyVehicles: React.FC = () => {
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                           <MapPin className="w-4 h-4 text-blue-500 shrink-0" />
 
-                          <span className="truncate">
-                            {vehicle.location}
-                          </span>
+                          <span className="truncate">{vehicle.location}</span>
                         </div>
                       )}
                     </div>
 
                     {/* Price */}
                     <div className="flex items-end justify-between border-t border-gray-100 pt-4">
-
                       <div>
-                        <p className="text-xs text-gray-500">
-                          Rental Price
-                        </p>
+                        <p className="text-xs text-gray-500">Rental Price</p>
 
                         <p className="text-xl font-bold text-blue-600">
-                          {formatPrice(
-                            vehicle.pricePerDay
-                          )}
+                          {formatPrice(vehicle.pricePerDay)}
                           <span className="text-sm font-normal text-gray-500">
                             {" "}
                             / day
@@ -751,15 +670,10 @@ const MyVehicles: React.FC = () => {
 
                     {/* Actions */}
                     <div className="grid grid-cols-3 gap-2 mt-5">
-
                       {/* View */}
                       <button
                         type="button"
-                        onClick={() =>
-                          navigate(
-                            `/vehicles/${vehicle._id}`
-                          )
-                        }
+                        onClick={() => navigate(`/vehicles/${vehicle._id}`)}
                         className="flex items-center justify-center gap-1.5 px-3 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition text-sm font-medium"
                       >
                         <Eye className="w-4 h-4" />
@@ -770,9 +684,7 @@ const MyVehicles: React.FC = () => {
                       <button
                         type="button"
                         onClick={() =>
-                          navigate(
-                            `/owner/vehicles/edit/${vehicle._id}`
-                          )
+                          navigate(`/owner/vehicles/edit/${vehicle._id}`)
                         }
                         className="flex items-center justify-center gap-1.5 px-3 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium"
                       >
@@ -783,9 +695,7 @@ const MyVehicles: React.FC = () => {
                       {/* Delete */}
                       <button
                         type="button"
-                        onClick={() =>
-                          openDeleteModal(vehicle)
-                        }
+                        onClick={() => openDeleteModal(vehicle)}
                         className="flex items-center justify-center gap-1.5 px-3 py-2.5 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition text-sm font-medium"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -806,9 +716,7 @@ const MyVehicles: React.FC = () => {
 
       {showDeleteModal && vehicleToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-
           <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6">
-
             {/* Icon */}
             <div className="mx-auto w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mb-4">
               <Trash2 className="w-7 h-7 text-red-600" />
@@ -832,7 +740,6 @@ const MyVehicles: React.FC = () => {
 
             {/* Buttons */}
             <div className="flex gap-3 mt-6">
-
               <button
                 type="button"
                 onClick={closeDeleteModal}
@@ -869,4 +776,3 @@ const MyVehicles: React.FC = () => {
 };
 
 export default MyVehicles;
-```
