@@ -1,170 +1,231 @@
-```tsx
-import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+import type { ChangeEvent, FormEvent } from "react";
+
+import { ArrowLeft, ImagePlus, Loader2, Save, X } from "lucide-react";
+
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  ArrowLeft,
-  Car,
-  Save,
-  Loader2,
-  Image as ImageIcon,
-  X,
-} from "lucide-react";
-import axiosInstance from "../../api/axios";
+
+import axiosInstance from "../api/axios";
 
 interface VehicleFormData {
   name: string;
   brand: string;
   model: string;
-  year: string;
-  category: string;
-  fuelType: string;
-  transmission: string;
-  seats: string;
+  type: string;
+  description: string;
   pricePerDay: string;
   location: string;
-  description: string;
-  features: string[];
+  registrationNumber: string;
+  seatingCapacity: string;
+  fuelType: string;
+  transmission: string;
+  year: string;
+  available: boolean;
 }
 
-const vehicleCategories = [
-  "Sedan",
-  "SUV",
-  "Hatchback",
-  "Luxury",
-  "Sports",
-  "MUV",
-  "Convertible",
-  "Pickup",
-];
+interface VehicleResponse {
+  _id: string;
+  name?: string;
+  brand?: string;
+  model?: string;
+  type?: string;
+  description?: string;
+  pricePerDay?: number;
+  price?: number;
+  location?: string;
+  registrationNumber?: string;
+  seatingCapacity?: number;
+  fuelType?: string;
+  transmission?: string;
+  year?: number;
+  available?: boolean;
+  image?: string;
+  images?: string[];
+}
 
-const fuelTypes = ["Petrol", "Diesel", "Electric", "Hybrid", "CNG"];
+interface ApiResponse {
+  vehicle?: VehicleResponse;
+  data?: VehicleResponse | VehicleResponse[];
+  message?: string;
+}
 
-const transmissionTypes = ["Manual", "Automatic"];
+interface AxiosErrorResponse {
+  response?: {
+    data?: {
+      message?: string;
+      error?: string;
+    };
+  };
+  message?: string;
+}
 
-const availableFeatures = [
-  "Air Conditioning",
-  "Bluetooth",
-  "GPS",
-  "USB Charging",
-  "Sunroof",
-  "Leather Seats",
-  "Parking Sensors",
-  "Backup Camera",
-  "Cruise Control",
-  "Apple CarPlay",
-  "Android Auto",
-];
+const initialFormData: VehicleFormData = {
+  name: "",
+  brand: "",
+  model: "",
+  type: "",
+  description: "",
+  pricePerDay: "",
+  location: "",
+  registrationNumber: "",
+  seatingCapacity: "",
+  fuelType: "",
+  transmission: "",
+  year: "",
+  available: true,
+};
+
+const getErrorMessage = (error: unknown, fallback: string): string => {
+  if (typeof error === "object" && error !== null && "response" in error) {
+    const axiosError = error as AxiosErrorResponse;
+
+    return (
+      axiosError.response?.data?.message ||
+      axiosError.response?.data?.error ||
+      axiosError.message ||
+      fallback
+    );
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return fallback;
+};
+
+const getVehicleFromResponse = (data: unknown): VehicleResponse | null => {
+  if (typeof data !== "object" || data === null) {
+    return null;
+  }
+
+  const response = data as ApiResponse;
+
+  if (response.vehicle) {
+    return response.vehicle;
+  }
+
+  if (response.data && !Array.isArray(response.data)) {
+    return response.data;
+  }
+
+  return null;
+};
 
 const EditVehicle: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState<VehicleFormData>({
-    name: "",
-    brand: "",
-    model: "",
-    year: "",
-    category: "",
-    fuelType: "",
-    transmission: "",
-    seats: "",
-    pricePerDay: "",
-    location: "",
-    description: "",
-    features: [],
-  });
+  const [formData, setFormData] = useState<VehicleFormData>(initialFormData);
 
   const [existingImages, setExistingImages] = useState<string[]>([]);
+
   const [newImages, setNewImages] = useState<File[]>([]);
-  const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
 
   const [loading, setLoading] = useState<boolean>(true);
+
   const [saving, setSaving] = useState<boolean>(false);
+
   const [error, setError] = useState<string>("");
+
   const [success, setSuccess] = useState<string>("");
 
-  // =========================================================
-  // FETCH VEHICLE
-  // =========================================================
-
+  /*
+   * Load vehicle details.
+   *
+   * Important:
+   * We do NOT call setState synchronously at
+   * the beginning of the effect.
+   *
+   * The state updates happen after the API
+   * request completes.
+   */
   useEffect(() => {
     if (!id) {
-      setError("Vehicle ID is missing.");
-      setLoading(false);
       return;
     }
 
-    fetchVehicle();
+    let active = true;
+
+    const fetchVehicle = async (): Promise<void> => {
+      try {
+        const response = await axiosInstance.get<unknown>(`/vehicles/${id}`);
+
+        if (!active) {
+          return;
+        }
+
+        const vehicle = getVehicleFromResponse(response.data);
+
+        if (!vehicle) {
+          setError("Vehicle details were not found.");
+          setLoading(false);
+          return;
+        }
+
+        setFormData({
+          name: vehicle.name ?? "",
+          brand: vehicle.brand ?? "",
+          model: vehicle.model ?? "",
+          type: vehicle.type ?? "",
+          description: vehicle.description ?? "",
+          pricePerDay: String(vehicle.pricePerDay ?? vehicle.price ?? ""),
+          location: vehicle.location ?? "",
+          registrationNumber: vehicle.registrationNumber ?? "",
+          seatingCapacity: String(vehicle.seatingCapacity ?? ""),
+          fuelType: vehicle.fuelType ?? "",
+          transmission: vehicle.transmission ?? "",
+          year: String(vehicle.year ?? ""),
+          available: vehicle.available !== false,
+        });
+
+        const images: string[] = [];
+
+        if (Array.isArray(vehicle.images)) {
+          images.push(
+            ...vehicle.images.filter(
+              (image): image is string =>
+                typeof image === "string" && image.trim().length > 0,
+            ),
+          );
+        }
+
+        if (
+          typeof vehicle.image === "string" &&
+          vehicle.image.trim().length > 0 &&
+          !images.includes(vehicle.image)
+        ) {
+          images.unshift(vehicle.image);
+        }
+
+        setExistingImages(images);
+        setLoading(false);
+      } catch (requestError: unknown) {
+        if (!active) {
+          return;
+        }
+
+        setError(
+          getErrorMessage(requestError, "Failed to load vehicle details."),
+        );
+
+        setLoading(false);
+      }
+    };
+
+    void fetchVehicle();
+
+    return () => {
+      active = false;
+    };
   }, [id]);
 
-  const fetchVehicle = async () => {
-    try {
-      setLoading(true);
-      setError("");
-
-      const response = await axiosInstance.get(`/vehicles/${id}`);
-
-      const vehicle =
-        response.data?.vehicle ||
-        response.data?.data ||
-        response.data;
-
-      if (!vehicle) {
-        throw new Error("Vehicle not found.");
-      }
-
-      setFormData({
-        name: vehicle.name || "",
-        brand: vehicle.brand || "",
-        model: vehicle.model || "",
-        year: vehicle.year ? String(vehicle.year) : "",
-        category: vehicle.category || "",
-        fuelType: vehicle.fuelType || "",
-        transmission: vehicle.transmission || "",
-        seats: vehicle.seats ? String(vehicle.seats) : "",
-        pricePerDay: vehicle.pricePerDay
-          ? String(vehicle.pricePerDay)
-          : "",
-        location: vehicle.location || "",
-        description: vehicle.description || "",
-        features: Array.isArray(vehicle.features)
-          ? vehicle.features
-          : [],
-      });
-
-      // Support multiple possible image field names
-      const images =
-        vehicle.images ||
-        vehicle.photos ||
-        vehicle.imageUrls ||
-        [];
-
-      setExistingImages(
-        Array.isArray(images)
-          ? images.filter((image: unknown) => typeof image === "string")
-          : []
-      );
-    } catch (err: any) {
-      console.error("Fetch vehicle error:", err);
-
-      setError(
-        err?.response?.data?.message ||
-          err?.message ||
-          "Failed to load vehicle."
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // =========================================================
-  // INPUT CHANGE
-  // =========================================================
-
   const handleChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
+    event: ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ): void => {
+    const { name, value } = event.target;
 
     setFormData((previous) => ({
       ...previous,
@@ -172,676 +233,681 @@ const EditVehicle: React.FC = () => {
     }));
   };
 
-  // =========================================================
-  // FEATURES
-  // =========================================================
-
-  const handleFeatureChange = (feature: string) => {
-    setFormData((previous) => {
-      const alreadySelected = previous.features.includes(feature);
-
-      return {
-        ...previous,
-        features: alreadySelected
-          ? previous.features.filter((item) => item !== feature)
-          : [...previous.features, feature],
-      };
-    });
-  };
-
-  // =========================================================
-  // IMAGE CHANGE
-  // =========================================================
-
-  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-
-    if (!files.length) return;
-
-    const validFiles = files.filter((file) => {
-      if (!file.type.startsWith("image/")) {
-        return false;
-      }
-
-      if (file.size > 5 * 1024 * 1024) {
-        return false;
-      }
-
-      return true;
-    });
-
-    setNewImages((previous) => [...previous, ...validFiles]);
-
-    const previews = validFiles.map((file) =>
-      URL.createObjectURL(file)
-    );
-
-    setNewImagePreviews((previous) => [
+  const handleAvailableChange = (
+    event: ChangeEvent<HTMLInputElement>,
+  ): void => {
+    setFormData((previous) => ({
       ...previous,
-      ...previews,
-    ]);
-
-    e.target.value = "";
+      available: event.target.checked,
+    }));
   };
 
-  // =========================================================
-  // REMOVE EXISTING IMAGE
-  // =========================================================
+  const handleNewImages = (event: ChangeEvent<HTMLInputElement>): void => {
+    const files = event.target.files;
 
-  const removeExistingImage = (index: number) => {
+    if (!files) {
+      return;
+    }
+
+    const selectedFiles = Array.from(files);
+
+    setNewImages((previous) => [...previous, ...selectedFiles]);
+
+    event.target.value = "";
+  };
+
+  const removeExistingImage = (image: string): void => {
     setExistingImages((previous) =>
-      previous.filter((_, imageIndex) => imageIndex !== index)
+      previous.filter((currentImage) => currentImage !== image),
     );
   };
 
-  // =========================================================
-  // REMOVE NEW IMAGE
-  // =========================================================
-
-  const removeNewImage = (index: number) => {
-    URL.revokeObjectURL(newImagePreviews[index]);
-
+  const removeNewImage = (index: number): void => {
     setNewImages((previous) =>
-      previous.filter((_, imageIndex) => imageIndex !== index)
-    );
-
-    setNewImagePreviews((previous) =>
-      previous.filter((_, imageIndex) => imageIndex !== index)
+      previous.filter((_, currentIndex) => currentIndex !== index),
     );
   };
 
-  // =========================================================
-  // SUBMIT
-  // =========================================================
-
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSubmit = async (
+    event: FormEvent<HTMLFormElement>,
+  ): Promise<void> => {
+    event.preventDefault();
 
     if (!id) {
       setError("Vehicle ID is missing.");
       return;
     }
 
+    setSaving(true);
     setError("");
     setSuccess("");
 
-    // Basic validation
-    if (!formData.name.trim()) {
-      setError("Vehicle name is required.");
-      return;
-    }
-
-    if (!formData.brand.trim()) {
-      setError("Brand is required.");
-      return;
-    }
-
-    if (!formData.model.trim()) {
-      setError("Model is required.");
-      return;
-    }
-
-    if (!formData.year) {
-      setError("Year is required.");
-      return;
-    }
-
-    if (!formData.category) {
-      setError("Please select a category.");
-      return;
-    }
-
-    if (!formData.fuelType) {
-      setError("Please select fuel type.");
-      return;
-    }
-
-    if (!formData.transmission) {
-      setError("Please select transmission type.");
-      return;
-    }
-
-    if (!formData.seats) {
-      setError("Number of seats is required.");
-      return;
-    }
-
-    if (!formData.pricePerDay) {
-      setError("Price per day is required.");
-      return;
-    }
-
-    if (!formData.location.trim()) {
-      setError("Location is required.");
-      return;
-    }
-
     try {
-      setSaving(true);
-
       const data = new FormData();
 
       data.append("name", formData.name.trim());
+
       data.append("brand", formData.brand.trim());
+
       data.append("model", formData.model.trim());
-      data.append("year", formData.year);
-      data.append("category", formData.category);
-      data.append("fuelType", formData.fuelType);
-      data.append("transmission", formData.transmission);
-      data.append("seats", formData.seats);
-      data.append("pricePerDay", formData.pricePerDay);
-      data.append("location", formData.location.trim());
+
+      data.append("type", formData.type);
+
       data.append("description", formData.description.trim());
 
-      // Send features
-      formData.features.forEach((feature) => {
-        data.append("features", feature);
-      });
+      data.append("pricePerDay", formData.pricePerDay);
 
-      // Send remaining existing images
+      data.append("location", formData.location.trim());
+
+      data.append("registrationNumber", formData.registrationNumber.trim());
+
+      data.append("seatingCapacity", formData.seatingCapacity);
+
+      data.append("fuelType", formData.fuelType);
+
+      data.append("transmission", formData.transmission);
+
+      data.append("year", formData.year);
+
+      data.append("available", String(formData.available));
+
+      /*
+       * Existing images that were not removed.
+       */
       existingImages.forEach((image) => {
         data.append("existingImages", image);
       });
 
-      // Send newly selected images
-      newImages.forEach((image) => {
-        data.append("images", image);
+      /*
+       * New images.
+       */
+      newImages.forEach((file) => {
+        data.append("images", file);
       });
 
-      const response = await axiosInstance.put(
+      const response = await axiosInstance.put<unknown>(
         `/vehicles/${id}`,
         data,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
       );
 
-      console.log("Updated vehicle:", response.data);
+      const responseData = response.data as ApiResponse;
 
-      setSuccess("Vehicle updated successfully.");
+      setSuccess(responseData.message || "Vehicle updated successfully.");
 
-      setTimeout(() => {
+      window.setTimeout(() => {
         navigate("/owner/vehicles");
-      }, 1200);
-    } catch (err: any) {
-      console.error("Update vehicle error:", err);
-
-      setError(
-        err?.response?.data?.message ||
-          err?.message ||
-          "Failed to update vehicle."
-      );
+      }, 1000);
+    } catch (requestError: unknown) {
+      setError(getErrorMessage(requestError, "Failed to update vehicle."));
     } finally {
       setSaving(false);
     }
   };
 
-  // =========================================================
-  // LOADING
-  // =========================================================
+  const handleCancel = (): void => {
+    navigate("/owner/vehicles");
+  };
 
-  if (loading) {
+  /*
+   * No vehicle ID.
+   *
+   * This is handled during rendering instead
+   * of calling setState from useEffect.
+   */
+  if (!id) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
-          <p className="text-gray-600">
-            Loading vehicle...
+      <div className="flex min-h-[60vh] items-center justify-center px-4">
+        <div className="w-full max-w-md rounded-xl border border-red-200 bg-red-50 p-6 text-center">
+          <h2 className="text-lg font-semibold text-red-700">
+            Vehicle ID is missing
+          </h2>
+
+          <p className="mt-2 text-sm text-red-600">
+            The vehicle could not be identified.
           </p>
+
+          <button
+            type="button"
+            onClick={() => navigate("/owner/vehicles")}
+            className="mt-5 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700"
+          >
+            Back to My Vehicles
+          </button>
         </div>
       </div>
     );
   }
 
-  // =========================================================
-  // UI
-  // =========================================================
+  /*
+   * Loading screen.
+   */
+  if (loading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="flex items-center gap-3 text-gray-600">
+          <Loader2 size={24} className="animate-spin" />
+
+          <span>Loading vehicle details...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-5xl mx-auto">
-
+    <div className="min-h-screen bg-gray-50 px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-5xl">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <button
-              type="button"
-              onClick={() => navigate("/owner/vehicles")}
-              className="p-2 rounded-lg bg-white border border-gray-200 hover:bg-gray-100 transition"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
+        <div className="mb-6">
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="mb-3 inline-flex items-center gap-2 text-sm font-medium text-gray-600 transition hover:text-gray-900"
+          >
+            <ArrowLeft size={18} />
+            Back to My Vehicles
+          </button>
 
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-                Edit Vehicle
-              </h1>
+          <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
+            Edit Vehicle
+          </h1>
 
-              <p className="text-gray-500 mt-1">
-                Update your vehicle information
-              </p>
-            </div>
-          </div>
-
-          <div className="hidden sm:flex items-center gap-2 text-blue-600">
-            <Car className="w-6 h-6" />
-            <span className="font-medium">
-              Vehicle Rental
-            </span>
-          </div>
+          <p className="mt-1 text-sm text-gray-500">
+            Update your vehicle information, pricing, availability and images.
+          </p>
         </div>
 
         {/* Error */}
         {error && (
-          <div className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700">
+          <div className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {error}
           </div>
         )}
 
         {/* Success */}
         {success && (
-          <div className="mb-5 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-green-700">
+          <div className="mb-5 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
             {success}
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
-
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Information */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-            <div className="flex items-center gap-2 mb-5">
-              <Car className="w-5 h-5 text-blue-600" />
-              <h2 className="text-lg font-semibold text-gray-900">
-                Basic Information
-              </h2>
-            </div>
+          <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
+            <h2 className="mb-5 text-lg font-semibold text-gray-900">
+              Basic Information
+            </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
               {/* Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Vehicle Name *
+                <label
+                  htmlFor="name"
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
+                  Vehicle Name
                 </label>
 
                 <input
-                  type="text"
+                  id="name"
                   name="name"
+                  type="text"
                   value={formData.name}
                   onChange={handleChange}
-                  placeholder="e.g. Toyota Fortuner"
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                  placeholder="Example: Toyota Innova"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 />
               </div>
 
               {/* Brand */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Brand *
+                <label
+                  htmlFor="brand"
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
+                  Brand
                 </label>
 
                 <input
-                  type="text"
+                  id="brand"
                   name="brand"
+                  type="text"
                   value={formData.brand}
                   onChange={handleChange}
-                  placeholder="e.g. Toyota"
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                  placeholder="Example: Toyota"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 />
               </div>
 
               {/* Model */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Model *
+                <label
+                  htmlFor="model"
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
+                  Model
                 </label>
 
                 <input
-                  type="text"
+                  id="model"
                   name="model"
+                  type="text"
                   value={formData.model}
                   onChange={handleChange}
-                  placeholder="e.g. Fortuner"
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                  placeholder="Example: Innova Crysta"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                />
+              </div>
+
+              {/* Type */}
+              <div>
+                <label
+                  htmlFor="type"
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
+                  Vehicle Type
+                </label>
+
+                <select
+                  id="type"
+                  name="type"
+                  value={formData.type}
+                  onChange={handleChange}
+                  required
+                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                >
+                  <option value="">Select vehicle type</option>
+
+                  <option value="car">Car</option>
+
+                  <option value="bike">Bike</option>
+
+                  <option value="suv">SUV</option>
+
+                  <option value="van">Van</option>
+
+                  <option value="truck">Truck</option>
+
+                  <option value="bus">Bus</option>
+
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              {/* Registration */}
+              <div>
+                <label
+                  htmlFor="registrationNumber"
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
+                  Registration Number
+                </label>
+
+                <input
+                  id="registrationNumber"
+                  name="registrationNumber"
+                  type="text"
+                  value={formData.registrationNumber}
+                  onChange={handleChange}
+                  required
+                  placeholder="TN 01 AB 1234"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm uppercase outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 />
               </div>
 
               {/* Year */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Manufacturing Year *
+                <label
+                  htmlFor="year"
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
+                  Manufacturing Year
                 </label>
 
                 <input
-                  type="number"
+                  id="year"
                   name="year"
+                  type="number"
                   value={formData.year}
                   onChange={handleChange}
-                  min="1990"
-                  max={new Date().getFullYear() + 1}
+                  required
+                  min="1900"
+                  max={new Date().getFullYear()}
                   placeholder="2024"
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              {/* Category */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Category *
-                </label>
-
-                <select
-                  name="category"
-                  value={formData.category}
-                  onChange={handleChange}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">
-                    Select category
-                  </option>
-
-                  {vehicleCategories.map((category) => (
-                    <option
-                      key={category}
-                      value={category}
-                    >
-                      {category}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Fuel */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Fuel Type *
-                </label>
-
-                <select
-                  name="fuelType"
-                  value={formData.fuelType}
-                  onChange={handleChange}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">
-                    Select fuel type
-                  </option>
-
-                  {fuelTypes.map((fuel) => (
-                    <option
-                      key={fuel}
-                      value={fuel}
-                    >
-                      {fuel}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Transmission */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Transmission *
-                </label>
-
-                <select
-                  name="transmission"
-                  value={formData.transmission}
-                  onChange={handleChange}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">
-                    Select transmission
-                  </option>
-
-                  {transmissionTypes.map((type) => (
-                    <option
-                      key={type}
-                      value={type}
-                    >
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Seats */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Number of Seats *
-                </label>
-
-                <input
-                  type="number"
-                  name="seats"
-                  value={formData.seats}
-                  onChange={handleChange}
-                  min="1"
-                  max="20"
-                  placeholder="5"
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              {/* Price */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Price Per Day (₹) *
-                </label>
-
-                <input
-                  type="number"
-                  name="pricePerDay"
-                  value={formData.pricePerDay}
-                  onChange={handleChange}
-                  min="0"
-                  placeholder="2500"
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              {/* Location */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Location *
-                </label>
-
-                <input
-                  type="text"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleChange}
-                  placeholder="Chennai, Tamil Nadu"
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 />
               </div>
             </div>
 
             {/* Description */}
             <div className="mt-5">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="description"
+                className="mb-2 block text-sm font-medium text-gray-700"
+              >
                 Description
               </label>
 
               <textarea
+                id="description"
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
                 rows={5}
+                required
                 placeholder="Describe your vehicle..."
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none resize-none focus:ring-2 focus:ring-blue-500"
+                className="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               />
             </div>
-          </div>
+          </section>
 
-          {/* Features */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-5">
-              Vehicle Features
+          {/* Rental Information */}
+          <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
+            <h2 className="mb-5 text-lg font-semibold text-gray-900">
+              Rental Information
             </h2>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {availableFeatures.map((feature) => {
-                const selected =
-                  formData.features.includes(feature);
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              {/* Price */}
+              <div>
+                <label
+                  htmlFor="pricePerDay"
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
+                  Price Per Day
+                </label>
 
-                return (
-                  <label
-                    key={feature}
-                    className={`flex items-center gap-3 rounded-lg border p-3 cursor-pointer transition ${
-                      selected
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selected}
-                      onChange={() =>
-                        handleFeatureChange(feature)
-                      }
-                      className="w-4 h-4 accent-blue-600"
-                    />
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                    ₹
+                  </span>
 
-                    <span className="text-sm text-gray-700">
-                      {feature}
-                    </span>
-                  </label>
-                );
-              })}
+                  <input
+                    id="pricePerDay"
+                    name="pricePerDay"
+                    type="number"
+                    value={formData.pricePerDay}
+                    onChange={handleChange}
+                    required
+                    min="0"
+                    step="0.01"
+                    placeholder="1000"
+                    className="w-full rounded-lg border border-gray-300 py-2.5 pl-9 pr-4 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  />
+                </div>
+              </div>
+
+              {/* Location */}
+              <div>
+                <label
+                  htmlFor="location"
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
+                  Location
+                </label>
+
+                <input
+                  id="location"
+                  name="location"
+                  type="text"
+                  value={formData.location}
+                  onChange={handleChange}
+                  required
+                  placeholder="Example: Chennai"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                />
+              </div>
+
+              {/* Seating */}
+              <div>
+                <label
+                  htmlFor="seatingCapacity"
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
+                  Seating Capacity
+                </label>
+
+                <input
+                  id="seatingCapacity"
+                  name="seatingCapacity"
+                  type="number"
+                  value={formData.seatingCapacity}
+                  onChange={handleChange}
+                  required
+                  min="1"
+                  placeholder="5"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                />
+              </div>
+
+              {/* Fuel */}
+              <div>
+                <label
+                  htmlFor="fuelType"
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
+                  Fuel Type
+                </label>
+
+                <select
+                  id="fuelType"
+                  name="fuelType"
+                  value={formData.fuelType}
+                  onChange={handleChange}
+                  required
+                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                >
+                  <option value="">Select fuel type</option>
+
+                  <option value="petrol">Petrol</option>
+
+                  <option value="diesel">Diesel</option>
+
+                  <option value="electric">Electric</option>
+
+                  <option value="hybrid">Hybrid</option>
+
+                  <option value="cng">CNG</option>
+                </select>
+              </div>
+
+              {/* Transmission */}
+              <div>
+                <label
+                  htmlFor="transmission"
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
+                  Transmission
+                </label>
+
+                <select
+                  id="transmission"
+                  name="transmission"
+                  value={formData.transmission}
+                  onChange={handleChange}
+                  required
+                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                >
+                  <option value="">Select transmission</option>
+
+                  <option value="manual">Manual</option>
+
+                  <option value="automatic">Automatic</option>
+
+                  <option value="semi-automatic">Semi-Automatic</option>
+                </select>
+              </div>
             </div>
-          </div>
+          </section>
+
+          {/* Availability */}
+          <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
+            <h2 className="mb-4 text-lg font-semibold text-gray-900">
+              Availability
+            </h2>
+
+            <label className="flex cursor-pointer items-center gap-3">
+              <input
+                type="checkbox"
+                checked={formData.available}
+                onChange={handleAvailableChange}
+                className="h-5 w-5 rounded border-gray-300"
+              />
+
+              <div>
+                <p className="font-medium text-gray-800">
+                  Vehicle is available for rent
+                </p>
+
+                <p className="text-sm text-gray-500">
+                  Turn this off if the vehicle is currently unavailable.
+                </p>
+              </div>
+            </label>
+          </section>
 
           {/* Existing Images */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-            <div className="flex items-center gap-2 mb-5">
-              <ImageIcon className="w-5 h-5 text-blue-600" />
+          <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
+            <h2 className="mb-2 text-lg font-semibold text-gray-900">
+              Existing Images
+            </h2>
 
-              <h2 className="text-lg font-semibold text-gray-900">
-                Vehicle Images
-              </h2>
-            </div>
+            <p className="mb-5 text-sm text-gray-500">
+              Remove any images that you no longer want to display.
+            </p>
 
-            {existingImages.length > 0 && (
-              <>
-                <p className="text-sm text-gray-500 mb-3">
-                  Existing Images
-                </p>
+            {existingImages.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center text-sm text-gray-500">
+                No existing images.
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+                {existingImages.map((image, index) => (
+                  <div
+                    key={`${image}-${index}`}
+                    className="group relative overflow-hidden rounded-lg border border-gray-200 bg-gray-100"
+                  >
+                    <img
+                      src={image}
+                      alt={`Vehicle ${index + 1}`}
+                      className="h-36 w-full object-cover"
+                      onError={(event) => {
+                        event.currentTarget.style.display = "none";
+                      }}
+                    />
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                  {existingImages.map((image, index) => (
-                    <div
-                      key={`${image}-${index}`}
-                      className="relative group"
+                    <button
+                      type="button"
+                      onClick={() => removeExistingImage(image)}
+                      className="absolute right-2 top-2 rounded-full bg-red-600 p-1.5 text-white shadow transition hover:bg-red-700"
+                      aria-label="Remove image"
                     >
-                      <img
-                        src={image}
-                        alt={`Vehicle ${index + 1}`}
-                        className="w-full h-36 object-cover rounded-lg border border-gray-200"
-                        onError={(e) => {
-                          (
-                            e.currentTarget as HTMLImageElement
-                          ).style.display = "none";
-                        }}
-                      />
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          removeExistingImage(index)
-                        }
-                        className="absolute top-2 right-2 bg-red-600 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </>
+                      <X size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
             )}
+          </section>
 
-            {/* New Images */}
-            {newImagePreviews.length > 0 && (
-              <>
-                <p className="text-sm text-gray-500 mb-3">
-                  New Images
-                </p>
+          {/* New Images */}
+          <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
+            <h2 className="mb-2 text-lg font-semibold text-gray-900">
+              Add New Images
+            </h2>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                  {newImagePreviews.map((preview, index) => (
-                    <div
-                      key={preview}
-                      className="relative group"
-                    >
-                      <img
-                        src={preview}
-                        alt={`New vehicle ${index + 1}`}
-                        className="w-full h-36 object-cover rounded-lg border border-gray-200"
-                      />
+            <p className="mb-5 text-sm text-gray-500">
+              Select one or more new images for your vehicle.
+            </p>
 
-                      <button
-                        type="button"
-                        onClick={() =>
-                          removeNewImage(index)
-                        }
-                        className="absolute top-2 right-2 bg-red-600 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
+            <label
+              htmlFor="images"
+              className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 px-6 py-10 text-center transition hover:border-blue-400 hover:bg-blue-50"
+            >
+              <ImagePlus size={36} className="mb-3 text-gray-400" />
 
-            {/* Upload */}
-            <label className="flex flex-col items-center justify-center w-full min-h-36 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition">
-              <ImageIcon className="w-10 h-10 text-gray-400 mb-2" />
-
-              <span className="text-sm font-medium text-gray-700">
-                Click to upload new images
+              <span className="font-medium text-gray-700">
+                Click to upload images
               </span>
 
-              <span className="text-xs text-gray-500 mt-1">
-                PNG, JPG, JPEG up to 5MB each
+              <span className="mt-1 text-xs text-gray-500">
+                PNG, JPG or JPEG
               </span>
 
               <input
+                id="images"
                 type="file"
-                accept="image/png,image/jpeg,image/jpg,image/webp"
+                accept="image/png,image/jpeg,image/jpg"
                 multiple
-                onChange={handleImageChange}
+                onChange={handleNewImages}
                 className="hidden"
               />
             </label>
-          </div>
+
+            {newImages.length > 0 && (
+              <div className="mt-5">
+                <h3 className="mb-3 text-sm font-medium text-gray-700">
+                  New Images
+                </h3>
+
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+                  {newImages.map((file, index) => (
+                    <div
+                      key={`${file.name}-${file.size}-${index}`}
+                      className="relative overflow-hidden rounded-lg border border-gray-200 bg-gray-100"
+                    >
+                      <img
+                        src={URL.createObjectURL(file)}
+                        alt={file.name}
+                        className="h-36 w-full object-cover"
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => removeNewImage(index)}
+                        className="absolute right-2 top-2 rounded-full bg-red-600 p-1.5 text-white shadow transition hover:bg-red-700"
+                        aria-label={`Remove ${file.name}`}
+                      >
+                        <X size={16} />
+                      </button>
+
+                      <div className="absolute bottom-0 left-0 right-0 truncate bg-black/60 px-2 py-1 text-xs text-white">
+                        {file.name}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
 
           {/* Buttons */}
-          <div className="flex flex-col sm:flex-row justify-end gap-3">
+          <div className="flex flex-col-reverse gap-3 pb-8 sm:flex-row sm:justify-end">
             <button
               type="button"
-              onClick={() => navigate("/owner/vehicles")}
+              onClick={handleCancel}
               disabled={saving}
-              className="px-6 py-3 rounded-lg border border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 transition disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-6 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
+              <X size={18} />
               Cancel
             </button>
 
             <button
               type="submit"
               disabled={saving}
-              className="flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {saving ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Loader2 size={18} className="animate-spin" />
                   Updating...
                 </>
               ) : (
                 <>
-                  <Save className="w-5 h-5" />
+                  <Save size={18} />
                   Update Vehicle
                 </>
               )}
@@ -854,4 +920,3 @@ const EditVehicle: React.FC = () => {
 };
 
 export default EditVehicle;
-```

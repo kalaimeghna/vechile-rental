@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Car,
@@ -65,6 +65,19 @@ interface Vehicle {
 }
 
 // =========================================================
+// AXIOS ERROR TYPE
+// =========================================================
+
+interface AxiosErrorResponse {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+  message?: string;
+}
+
+// =========================================================
 // COMPONENT
 // =========================================================
 
@@ -91,11 +104,7 @@ const MyVehicles: React.FC = () => {
   // FETCH VEHICLES
   // =========================================================
 
-  useEffect(() => {
-    fetchMyVehicles();
-  }, []);
-
-  const fetchMyVehicles = async () => {
+  const fetchMyVehicles = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
@@ -108,12 +117,14 @@ const MyVehicles: React.FC = () => {
         response.data?.vehicles || response.data?.data || response.data || [];
 
       setVehicles(Array.isArray(data) ? data : []);
-    } catch (err: any) {
-      console.error("Fetch vehicles error:", err);
+    } catch (error: unknown) {
+      console.error("Fetch vehicles error:", error);
+
+      const err = error as AxiosErrorResponse;
 
       setError(
-        err?.response?.data?.message ||
-          err?.message ||
+        err.response?.data?.message ||
+          err.message ||
           "Failed to load your vehicles.",
       );
 
@@ -121,8 +132,18 @@ const MyVehicles: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
+  // =========================================================
+  // FETCH ON PAGE LOAD
+  // =========================================================
+  useEffect(() => {
+    const loadVehicles = async () => {
+      await fetchMyVehicles();
+    };
+
+    void loadVehicles();
+  }, [fetchMyVehicles]);
   // =========================================================
   // GET IMAGE
   // =========================================================
@@ -233,7 +254,9 @@ const MyVehicles: React.FC = () => {
   };
 
   const closeDeleteModal = () => {
-    if (deleteLoading) return;
+    if (deleteLoading) {
+      return;
+    }
 
     setShowDeleteModal(false);
     setVehicleToDelete(null);
@@ -257,13 +280,16 @@ const MyVehicles: React.FC = () => {
         previous.filter((vehicle) => vehicle._id !== vehicleToDelete._id),
       );
 
-      closeDeleteModal();
-    } catch (err: any) {
-      console.error("Delete vehicle error:", err);
+      setShowDeleteModal(false);
+      setVehicleToDelete(null);
+    } catch (error: unknown) {
+      console.error("Delete vehicle error:", error);
+
+      const err = error as AxiosErrorResponse;
 
       setError(
-        err?.response?.data?.message ||
-          err?.message ||
+        err.response?.data?.message ||
+          err.message ||
           "Failed to delete vehicle.",
       );
     } finally {
@@ -359,6 +385,7 @@ const MyVehicles: React.FC = () => {
               type="button"
               onClick={() => setError("")}
               className="text-red-500 hover:text-red-700"
+              aria-label="Close error"
             >
               <X className="w-5 h-5" />
             </button>
@@ -371,6 +398,7 @@ const MyVehicles: React.FC = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           {/* Total */}
+
           <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
@@ -388,6 +416,7 @@ const MyVehicles: React.FC = () => {
           </div>
 
           {/* Available */}
+
           <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
@@ -408,6 +437,7 @@ const MyVehicles: React.FC = () => {
           </div>
 
           {/* Unavailable */}
+
           <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
@@ -435,25 +465,27 @@ const MyVehicles: React.FC = () => {
         <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm mb-6">
           <div className="flex flex-col md:flex-row gap-4">
             {/* Search */}
+
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
 
               <input
                 type="text"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search by vehicle, brand, model or location..."
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
 
             {/* Category */}
+
             <div className="relative md:w-56">
               <Settings2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
 
               <select
                 value={category}
-                onChange={(e) => setCategory(e.target.value)}
+                onChange={(event) => setCategory(event.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg bg-white outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {categories.map((item) => (
@@ -465,9 +497,10 @@ const MyVehicles: React.FC = () => {
             </div>
 
             {/* Refresh */}
+
             <button
               type="button"
-              onClick={fetchMyVehicles}
+              onClick={() => void fetchMyVehicles()}
               className="flex items-center justify-center gap-2 px-5 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
               title="Refresh vehicles"
             >
@@ -563,18 +596,20 @@ const MyVehicles: React.FC = () => {
                   className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition"
                 >
                   {/* Image */}
+
                   <div className="relative h-56 bg-gray-100">
                     <img
                       src={getVehicleImage(vehicle)}
                       alt={getVehicleName(vehicle)}
                       className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).src =
+                      onError={(event) => {
+                        event.currentTarget.src =
                           "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=900&q=80";
                       }}
                     />
 
                     {/* Status */}
+
                     <div className="absolute top-3 left-3">
                       <span
                         className={`px-3 py-1.5 rounded-full text-xs font-semibold ${
@@ -588,6 +623,7 @@ const MyVehicles: React.FC = () => {
                     </div>
 
                     {/* Category */}
+
                     {vehicle.category && (
                       <div className="absolute top-3 right-3">
                         <span className="px-3 py-1.5 rounded-full bg-black/70 text-white text-xs font-medium">
@@ -598,8 +634,10 @@ const MyVehicles: React.FC = () => {
                   </div>
 
                   {/* Content */}
+
                   <div className="p-5">
                     {/* Name */}
+
                     <div className="mb-4">
                       <h2 className="text-xl font-bold text-gray-900 truncate">
                         {getVehicleName(vehicle)}
@@ -613,8 +651,10 @@ const MyVehicles: React.FC = () => {
                     </div>
 
                     {/* Details */}
+
                     <div className="grid grid-cols-2 gap-3 mb-4">
                       {/* Fuel */}
+
                       {vehicle.fuelType && (
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                           <Fuel className="w-4 h-4 text-blue-500" />
@@ -624,6 +664,7 @@ const MyVehicles: React.FC = () => {
                       )}
 
                       {/* Seats */}
+
                       {vehicle.seats && (
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                           <Users className="w-4 h-4 text-blue-500" />
@@ -633,6 +674,7 @@ const MyVehicles: React.FC = () => {
                       )}
 
                       {/* Transmission */}
+
                       {vehicle.transmission && (
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                           <Settings2 className="w-4 h-4 text-blue-500" />
@@ -644,6 +686,7 @@ const MyVehicles: React.FC = () => {
                       )}
 
                       {/* Location */}
+
                       {vehicle.location && (
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                           <MapPin className="w-4 h-4 text-blue-500 shrink-0" />
@@ -654,12 +697,14 @@ const MyVehicles: React.FC = () => {
                     </div>
 
                     {/* Price */}
+
                     <div className="flex items-end justify-between border-t border-gray-100 pt-4">
                       <div>
                         <p className="text-xs text-gray-500">Rental Price</p>
 
                         <p className="text-xl font-bold text-blue-600">
                           {formatPrice(vehicle.pricePerDay)}
+
                           <span className="text-sm font-normal text-gray-500">
                             {" "}
                             / day
@@ -669,8 +714,10 @@ const MyVehicles: React.FC = () => {
                     </div>
 
                     {/* Actions */}
+
                     <div className="grid grid-cols-3 gap-2 mt-5">
                       {/* View */}
+
                       <button
                         type="button"
                         onClick={() => navigate(`/vehicles/${vehicle._id}`)}
@@ -681,6 +728,7 @@ const MyVehicles: React.FC = () => {
                       </button>
 
                       {/* Edit */}
+
                       <button
                         type="button"
                         onClick={() =>
@@ -693,6 +741,7 @@ const MyVehicles: React.FC = () => {
                       </button>
 
                       {/* Delete */}
+
                       <button
                         type="button"
                         onClick={() => openDeleteModal(vehicle)}
@@ -718,6 +767,7 @@ const MyVehicles: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6">
             {/* Icon */}
+
             <div className="mx-auto w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mb-4">
               <Trash2 className="w-7 h-7 text-red-600" />
             </div>
@@ -739,6 +789,7 @@ const MyVehicles: React.FC = () => {
             </p>
 
             {/* Buttons */}
+
             <div className="flex gap-3 mt-6">
               <button
                 type="button"
@@ -751,7 +802,7 @@ const MyVehicles: React.FC = () => {
 
               <button
                 type="button"
-                onClick={handleDelete}
+                onClick={() => void handleDelete()}
                 disabled={!!deleteLoading}
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 disabled:opacity-50"
               >
