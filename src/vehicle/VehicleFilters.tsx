@@ -1,10 +1,10 @@
 import { RotateCcw, SlidersHorizontal } from "lucide-react";
-import { VehicleType, FuelType, Transmission } from "../../types";
+import type { VehicleType, FuelType, TransmissionType } from "../types/vehicle";
 
 export interface VehicleFilterValues {
   vehicleType: VehicleType | "all";
   fuelType: FuelType | "all";
-  transmission: Transmission | "all";
+  transmission: TransmissionType | "all";
   minPrice: string;
   maxPrice: string;
   seats: string;
@@ -22,7 +22,10 @@ export default function VehicleFilters({
   onChange,
   onReset,
 }: VehicleFiltersProps) {
-  const updateFilter = (key: keyof VehicleFilterValues, value: string) => {
+  const updateFilter = <K extends keyof VehicleFilterValues>(
+    key: K,
+    value: VehicleFilterValues[K],
+  ) => {
     onChange({
       ...filters,
       [key]: value,
@@ -40,7 +43,6 @@ export default function VehicleFilters({
 
           <div>
             <h2 className="font-black text-slate-900">Filters</h2>
-
             <p className="text-xs text-slate-500">Find your perfect vehicle</p>
           </div>
         </div>
@@ -64,7 +66,12 @@ export default function VehicleFilters({
 
           <select
             value={filters.vehicleType}
-            onChange={(e) => updateFilter("vehicleType", e.target.value)}
+            onChange={(e) =>
+              updateFilter(
+                "vehicleType",
+                e.target.value as VehicleFilterValues["vehicleType"],
+              )
+            }
             className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
           >
             <option value="all">All Vehicles</option>
@@ -94,7 +101,12 @@ export default function VehicleFilters({
               <button
                 key={item.value}
                 type="button"
-                onClick={() => updateFilter("fuelType", item.value)}
+                onClick={() =>
+                  updateFilter(
+                    "fuelType",
+                    item.value as VehicleFilterValues["fuelType"],
+                  )
+                }
                 className={`rounded-lg border px-3 py-2 text-sm font-semibold transition ${
                   filters.fuelType === item.value
                     ? "border-blue-600 bg-blue-600 text-white"
@@ -122,7 +134,12 @@ export default function VehicleFilters({
               <button
                 key={item.value}
                 type="button"
-                onClick={() => updateFilter("transmission", item.value)}
+                onClick={() =>
+                  updateFilter(
+                    "transmission",
+                    item.value as VehicleFilterValues["transmission"],
+                  )
+                }
                 className={`rounded-lg border px-2 py-2 text-xs font-semibold transition ${
                   filters.transmission === item.value
                     ? "border-blue-600 bg-blue-600 text-white"
@@ -146,7 +163,6 @@ export default function VehicleFilters({
               <label className="mb-1 block text-xs text-slate-400">
                 Minimum
               </label>
-
               <input
                 type="number"
                 min="0"
@@ -161,7 +177,6 @@ export default function VehicleFilters({
               <label className="mb-1 block text-xs text-slate-400">
                 Maximum
               </label>
-
               <input
                 type="number"
                 min="0"
@@ -202,15 +217,17 @@ export default function VehicleFilters({
 
           <select
             value={filters.sortBy}
-            onChange={(e) => updateFilter("sortBy", e.target.value)}
+            onChange={(e) =>
+              updateFilter(
+                "sortBy",
+                e.target.value as VehicleFilterValues["sortBy"],
+              )
+            }
             className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500"
           >
             <option value="default">Recommended</option>
-
             <option value="price-low">Price: Low to High</option>
-
             <option value="price-high">Price: High to Low</option>
-
             <option value="newest">Newest Vehicles</option>
           </select>
         </div>

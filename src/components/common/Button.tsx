@@ -1,4 +1,5 @@
-import React, { forwardRef, ButtonHTMLAttributes, ReactNode } from "react";
+import React, { forwardRef } from "react";
+import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 
 // =========================================================

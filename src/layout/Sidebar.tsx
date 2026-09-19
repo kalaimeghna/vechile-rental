@@ -1,6 +1,7 @@
 // src/components/owner/Sidebar.tsx
 
 import React, { useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -12,7 +13,6 @@ import {
   Bell,
   Settings,
   LogOut,
-  Menu,
   X,
   ChevronLeft,
   ChevronRight,
@@ -24,7 +24,7 @@ import {
 
 interface SidebarProps {
   mobileOpen?: boolean;
-  setMobileOpen?: React.Dispatch<React.SetStateAction<boolean>>;
+  setMobileOpen?: Dispatch<SetStateAction<boolean>>;
 }
 
 // =========================================================
@@ -78,7 +78,7 @@ const accountItems = [
 ];
 
 // =========================================================
-// SIDEBAR
+// SIDEBAR COMPONENT
 // =========================================================
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -86,11 +86,10 @@ const Sidebar: React.FC<SidebarProps> = ({
   setMobileOpen,
 }) => {
   const navigate = useNavigate();
-
   const [collapsed, setCollapsed] = useState(false);
 
   // =======================================================
-  // LOGOUT
+  // LOGOUT HANDLER
   // =======================================================
 
   const handleLogout = () => {
@@ -114,7 +113,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
 
   // =======================================================
-  // NAV LINK
+  // RENDER NAVIGATION ITEM
   // =======================================================
 
   const renderNavItem = (item: (typeof menuItems)[number]) => {
@@ -208,7 +207,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
 
   // =======================================================
-  // DESKTOP SIDEBAR
+  // SIDEBAR CONTENT LAYOUT
   // =======================================================
 
   const sidebarContent = (
@@ -225,10 +224,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         ${collapsed ? "w-20" : "w-64"}
       `}
     >
-      {/* ===================================================
-          LOGO
-      ==================================================== */}
-
+      {/* Logo Header */}
       <div
         className={`
           h-20
@@ -251,32 +247,26 @@ const Sidebar: React.FC<SidebarProps> = ({
           {!collapsed && (
             <div className="text-left">
               <h1 className="font-bold text-gray-900">DriveRent</h1>
-
               <p className="text-xs text-gray-500">Owner Panel</p>
             </div>
           )}
         </button>
 
-        {/* Mobile close */}
-
+        {/* Mobile close button */}
         {setMobileOpen && (
           <button
             type="button"
             onClick={closeMobileSidebar}
             className="lg:hidden p-2 rounded-lg hover:bg-gray-100"
+            aria-label="Close sidebar"
           >
             <X className="w-5 h-5 text-gray-600" />
           </button>
         )}
       </div>
 
-      {/* ===================================================
-          NAVIGATION
-      ==================================================== */}
-
+      {/* Navigation Sections */}
       <div className="flex-1 overflow-y-auto px-3 py-5">
-        {/* Main */}
-
         {!collapsed && (
           <p className="px-3 mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
             Main Menu
@@ -285,11 +275,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
         <nav className="space-y-1">{menuItems.map(renderNavItem)}</nav>
 
-        {/* Divider */}
-
         <div className="my-6 border-t border-gray-100" />
-
-        {/* Account */}
 
         {!collapsed && (
           <p className="px-3 mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
@@ -300,13 +286,8 @@ const Sidebar: React.FC<SidebarProps> = ({
         <nav className="space-y-1">{accountItems.map(renderAccountItem)}</nav>
       </div>
 
-      {/* ===================================================
-          BOTTOM
-      ==================================================== */}
-
+      {/* Bottom Panel (Logout & Collapse Toggle) */}
       <div className="p-3 border-t border-gray-200">
-        {/* Logout */}
-
         <button
           type="button"
           onClick={handleLogout}
@@ -326,12 +307,10 @@ const Sidebar: React.FC<SidebarProps> = ({
           `}
         >
           <LogOut className="w-5 h-5 shrink-0" />
-
           {!collapsed && <span className="font-medium text-sm">Logout</span>}
         </button>
 
-        {/* Collapse Button */}
-
+        {/* Collapse Button (Desktop Only) */}
         <button
           type="button"
           onClick={() => setCollapsed((previous) => !previous)}
@@ -364,23 +343,19 @@ const Sidebar: React.FC<SidebarProps> = ({
     </div>
   );
 
-  // =========================================================
-  // MOBILE
-  // =========================================================
+  // =======================================================
+  // RESPONSIVE WRAPPERS
+  // =======================================================
 
   if (setMobileOpen) {
     return (
       <>
-        {/* Mobile overlay */}
-
         {mobileOpen && (
           <div
             className="fixed inset-0 z-40 bg-black/40 lg:hidden"
             onClick={closeMobileSidebar}
           />
         )}
-
-        {/* Mobile sidebar */}
 
         <aside
           className={`
@@ -400,10 +375,6 @@ const Sidebar: React.FC<SidebarProps> = ({
       </>
     );
   }
-
-  // =========================================================
-  // DESKTOP
-  // =========================================================
 
   return (
     <aside className="hidden lg:block fixed left-0 top-0 bottom-0 z-30">

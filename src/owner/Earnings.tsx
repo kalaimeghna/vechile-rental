@@ -9,14 +9,13 @@ import {
   Car,
   Download,
   ArrowUpRight,
-  ArrowDownRight,
   Wallet,
   Search,
   Filter,
 } from "lucide-react";
 
 /* ============================================================
-   TYPES
+    TYPES
 ============================================================ */
 
 type TransactionStatus = "completed" | "pending" | "refunded";
@@ -40,8 +39,8 @@ interface MonthlyEarning {
 }
 
 /* ============================================================
-   SAMPLE DATA
-   Replace with backend API data later.
+    SAMPLE DATA
+    Replace with backend API data later.
 ============================================================ */
 
 const monthlyEarnings: MonthlyEarning[] = [
@@ -84,7 +83,6 @@ const sampleTransactions: Transaction[] = [
     status: "completed",
     paymentMethod: "UPI",
   },
-
   {
     _id: "transaction-002",
     bookingId: "VR-2026-1002",
@@ -97,7 +95,6 @@ const sampleTransactions: Transaction[] = [
     status: "completed",
     paymentMethod: "Card",
   },
-
   {
     _id: "transaction-003",
     bookingId: "VR-2026-1003",
@@ -110,7 +107,6 @@ const sampleTransactions: Transaction[] = [
     status: "pending",
     paymentMethod: "UPI",
   },
-
   {
     _id: "transaction-004",
     bookingId: "VR-2026-1004",
@@ -123,7 +119,6 @@ const sampleTransactions: Transaction[] = [
     status: "completed",
     paymentMethod: "Cash",
   },
-
   {
     _id: "transaction-005",
     bookingId: "VR-2026-1005",
@@ -139,7 +134,7 @@ const sampleTransactions: Transaction[] = [
 ];
 
 /* ============================================================
-   HELPERS
+    HELPERS
 ============================================================ */
 
 const formatPrice = (amount: number): string => {
@@ -165,7 +160,7 @@ const formatDate = (dateString: string): string => {
 };
 
 /* ============================================================
-   STATUS BADGE
+    STATUS BADGE
 ============================================================ */
 
 const StatusBadge = ({ status }: { status: TransactionStatus }) => {
@@ -196,16 +191,13 @@ const StatusBadge = ({ status }: { status: TransactionStatus }) => {
 };
 
 /* ============================================================
-   MAIN COMPONENT
+    MAIN COMPONENT
 ============================================================ */
 
 export default function Earnings() {
   const [transactions] = useState<Transaction[]>(sampleTransactions);
-
   const [search, setSearch] = useState("");
-
   const [statusFilter, setStatusFilter] = useState("all");
-
   const [period, setPeriod] = useState("6-months");
 
   /* ==========================================================
@@ -281,15 +273,6 @@ export default function Earnings() {
   ========================================================== */
 
   const handleDownloadReport = () => {
-    /*
-      Backend API example:
-
-      window.open(
-        "/api/earnings/report",
-        "_blank"
-      );
-    */
-
     alert("Earnings report will be generated.");
   };
 
@@ -300,14 +283,10 @@ export default function Earnings() {
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        {/* ==================================================
-            HEADER
-        =================================================== */}
-
+        {/* HEADER */}
         <div className="mb-7 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h1 className="text-3xl font-black text-slate-900">Earnings</h1>
-
             <p className="mt-1 text-sm text-slate-500">
               Track your vehicle rental earnings and transactions.
             </p>
@@ -323,30 +302,23 @@ export default function Earnings() {
           </button>
         </div>
 
-        {/* ==================================================
-            STAT CARDS
-        =================================================== */}
-
+        {/* STAT CARDS */}
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {/* Total Earnings */}
-
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm font-semibold text-slate-500">
                   Total Earnings
                 </p>
-
                 <h2 className="mt-2 text-2xl font-black text-slate-900">
                   {formatPrice(totalEarnings)}
                 </h2>
               </div>
-
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-50 text-green-600">
                 <IndianRupee size={21} />
               </div>
             </div>
-
             <div className="mt-4 flex items-center gap-1.5 text-xs font-bold text-green-600">
               <ArrowUpRight size={15} />
               {growthPercentage}% this month
@@ -354,92 +326,75 @@ export default function Earnings() {
           </div>
 
           {/* Current Month */}
-
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm font-semibold text-slate-500">
                   This Month
                 </p>
-
                 <h2 className="mt-2 text-2xl font-black text-slate-900">
                   {formatPrice(currentMonthEarnings)}
                 </h2>
               </div>
-
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                 <TrendingUp size={21} />
               </div>
             </div>
-
             <p className="mt-4 text-xs text-slate-400">
               Compared with {formatPrice(previousMonthEarnings)} last month
             </p>
           </div>
 
           {/* Pending */}
-
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm font-semibold text-slate-500">
                   Pending Earnings
                 </p>
-
                 <h2 className="mt-2 text-2xl font-black text-slate-900">
                   {formatPrice(pendingEarnings)}
                 </h2>
               </div>
-
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-yellow-50 text-yellow-600">
                 <Clock3 size={21} />
               </div>
             </div>
-
             <p className="mt-4 text-xs text-slate-400">
               Awaiting payment settlement
             </p>
           </div>
 
           {/* Bookings */}
-
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm font-semibold text-slate-500">
                   Completed Bookings
                 </p>
-
                 <h2 className="mt-2 text-2xl font-black text-slate-900">
                   {completedBookings}
                 </h2>
               </div>
-
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-purple-50 text-purple-600">
                 <Car size={21} />
               </div>
             </div>
-
             <p className="mt-4 text-xs text-slate-400">
               Successful rental bookings
             </p>
           </div>
         </div>
 
-        {/* ==================================================
-            CHART + WALLET
-        =================================================== */}
-
+        {/* CHART + WALLET */}
         <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_320px]">
           {/* Chart */}
-
           <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-lg font-black text-slate-900">
                   Earnings Overview
                 </h2>
-
                 <p className="mt-1 text-xs text-slate-400">
                   Your monthly rental earnings
                 </p>
@@ -451,14 +406,10 @@ export default function Earnings() {
                 className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-600 outline-none"
               >
                 <option value="6-months">Last 6 Months</option>
-
                 <option value="12-months">Last 12 Months</option>
-
                 <option value="year">This Year</option>
               </select>
             </div>
-
-            {/* Chart */}
 
             <div className="mt-8 flex h-64 items-end gap-3 sm:gap-6">
               {monthlyEarnings.map((item) => {
@@ -493,20 +444,17 @@ export default function Earnings() {
           </section>
 
           {/* Wallet */}
-
           <section className="rounded-2xl bg-slate-900 p-6 text-white shadow-sm">
             <div className="flex items-center justify-between">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10">
                 <Wallet size={22} />
               </div>
-
               <span className="rounded-full bg-green-400/10 px-3 py-1 text-xs font-bold text-green-300">
                 Active
               </span>
             </div>
 
             <p className="mt-8 text-sm text-slate-400">Available Balance</p>
-
             <h2 className="mt-2 text-3xl font-black">
               {formatPrice(totalEarnings)}
             </h2>
@@ -514,7 +462,6 @@ export default function Earnings() {
             <div className="mt-8 border-t border-white/10 pt-5">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-slate-400">Pending</span>
-
                 <span className="font-bold">
                   {formatPrice(pendingEarnings)}
                 </span>
@@ -522,7 +469,6 @@ export default function Earnings() {
 
               <div className="mt-3 flex items-center justify-between text-sm">
                 <span className="text-slate-400">Refunded</span>
-
                 <span className="font-bold text-red-300">
                   {formatPrice(refundedAmount)}
                 </span>
@@ -539,20 +485,14 @@ export default function Earnings() {
           </section>
         </div>
 
-        {/* ==================================================
-            TRANSACTIONS
-        =================================================== */}
-
+        {/* TRANSACTIONS */}
         <section className="mt-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
-          {/* Header */}
-
           <div className="border-b border-slate-100 p-5 sm:p-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <h2 className="text-lg font-black text-slate-900">
                   Transaction History
                 </h2>
-
                 <p className="mt-1 text-xs text-slate-400">
                   View all your rental transactions.
                 </p>
@@ -560,13 +500,11 @@ export default function Earnings() {
 
               <div className="flex flex-col gap-3 sm:flex-row">
                 {/* Search */}
-
                 <div className="relative">
                   <Search
                     size={16}
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
                   />
-
                   <input
                     type="text"
                     value={search}
@@ -577,24 +515,19 @@ export default function Earnings() {
                 </div>
 
                 {/* Filter */}
-
                 <div className="relative">
                   <Filter
                     size={15}
                     className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
                   />
-
                   <select
                     value={statusFilter}
                     onChange={(event) => setStatusFilter(event.target.value)}
                     className="appearance-none rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-8 text-xs font-bold text-slate-600 outline-none"
                   >
                     <option value="all">All Status</option>
-
                     <option value="completed">Completed</option>
-
                     <option value="pending">Pending</option>
-
                     <option value="refunded">Refunded</option>
                   </select>
                 </div>
@@ -603,7 +536,6 @@ export default function Earnings() {
           </div>
 
           {/* Desktop Table */}
-
           <div className="hidden overflow-x-auto md:block">
             <table className="w-full">
               <thead>
@@ -611,29 +543,23 @@ export default function Earnings() {
                   <th className="px-6 py-4 text-left text-xs font-black uppercase tracking-wide text-slate-400">
                     Booking
                   </th>
-
                   <th className="px-6 py-4 text-left text-xs font-black uppercase tracking-wide text-slate-400">
                     Vehicle
                   </th>
-
                   <th className="px-6 py-4 text-left text-xs font-black uppercase tracking-wide text-slate-400">
                     Customer
                   </th>
-
                   <th className="px-6 py-4 text-left text-xs font-black uppercase tracking-wide text-slate-400">
                     Date
                   </th>
-
                   <th className="px-6 py-4 text-left text-xs font-black uppercase tracking-wide text-slate-400">
                     Amount
                   </th>
-
                   <th className="px-6 py-4 text-left text-xs font-black uppercase tracking-wide text-slate-400">
                     Status
                   </th>
                 </tr>
               </thead>
-
               <tbody>
                 {filteredTransactions.map((transaction) => (
                   <tr
@@ -644,7 +570,6 @@ export default function Earnings() {
                       <span className="text-sm font-black text-slate-800">
                         {transaction.bookingId}
                       </span>
-
                       <p className="mt-1 text-xs text-slate-400">
                         {transaction.paymentMethod}
                       </p>
@@ -655,7 +580,6 @@ export default function Earnings() {
                         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
                           <Car size={17} />
                         </div>
-
                         <span className="text-sm font-bold text-slate-700">
                           {transaction.vehicleName}
                         </span>
@@ -678,7 +602,6 @@ export default function Earnings() {
                       <span className="text-sm font-black text-slate-800">
                         {formatPrice(transaction.netAmount)}
                       </span>
-
                       <p className="mt-1 text-xs text-slate-400">
                         Fee: {formatPrice(transaction.platformFee)}
                       </p>
@@ -694,7 +617,6 @@ export default function Earnings() {
           </div>
 
           {/* Mobile Cards */}
-
           <div className="divide-y divide-slate-100 md:hidden">
             {filteredTransactions.map((transaction) => (
               <div key={transaction._id} className="p-5">
@@ -703,12 +625,10 @@ export default function Earnings() {
                     <p className="text-sm font-black text-slate-800">
                       {transaction.bookingId}
                     </p>
-
                     <p className="mt-1 text-xs text-slate-400">
                       {formatDate(transaction.date)}
                     </p>
                   </div>
-
                   <StatusBadge status={transaction.status} />
                 </div>
 
@@ -716,12 +636,10 @@ export default function Earnings() {
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
                     <Car size={18} />
                   </div>
-
                   <div>
                     <p className="text-sm font-bold text-slate-700">
                       {transaction.vehicleName}
                     </p>
-
                     <p className="mt-1 text-xs text-slate-400">
                       {transaction.customerName}
                     </p>
@@ -731,7 +649,6 @@ export default function Earnings() {
                 <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
                   <div>
                     <p className="text-xs text-slate-400">Net Earnings</p>
-
                     <p className="mt-1 text-lg font-black text-slate-900">
                       {formatPrice(transaction.netAmount)}
                     </p>
@@ -739,7 +656,6 @@ export default function Earnings() {
 
                   <div className="text-right">
                     <p className="text-xs text-slate-400">Platform Fee</p>
-
                     <p className="mt-1 text-sm font-bold text-slate-600">
                       {formatPrice(transaction.platformFee)}
                     </p>
@@ -750,17 +666,14 @@ export default function Earnings() {
           </div>
 
           {/* Empty */}
-
           {filteredTransactions.length === 0 && (
             <div className="px-6 py-16 text-center">
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-400">
                 <Search size={24} />
               </div>
-
               <h3 className="mt-4 font-black text-slate-800">
                 No transactions found
               </h3>
-
               <p className="mt-1 text-sm text-slate-400">
                 Try changing your search or filter.
               </p>
@@ -768,13 +681,9 @@ export default function Earnings() {
           )}
         </section>
 
-        {/* ==================================================
-            INFO
-        =================================================== */}
-
+        {/* INFO */}
         <div className="mt-6 flex items-start gap-3 rounded-2xl border border-blue-100 bg-blue-50 p-4">
           <CalendarDays size={19} className="mt-0.5 shrink-0 text-blue-600" />
-
           <p className="text-xs leading-5 text-blue-700">
             Earnings are calculated after platform fees. Pending earnings will
             become available after the booking is successfully completed and the

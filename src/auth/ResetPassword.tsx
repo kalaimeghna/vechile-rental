@@ -1,4 +1,5 @@
-import React, { FormEvent, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
+import type { FormEvent, ChangeEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   CheckCircle2,
@@ -9,9 +10,9 @@ import {
   XCircle,
 } from "lucide-react";
 
-import axiosInstance from "../../api/axios";
-import Input from "../../components/common/Input";
-import Button from "../../components/common/Button";
+import axiosInstance from "../api/axios";
+import Input from "../components/common/Input";
+import Button from "../components/common/Button";
 
 // =========================================================
 // PASSWORD RULES
@@ -158,12 +159,21 @@ const ResetPassword: React.FC = () => {
       setTimeout(() => {
         navigate("/login");
       }, 2500);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Reset password error:", err);
 
+      const errorResponse = err as {
+        response?: {
+          data?: {
+            message?: string;
+            error?: string;
+          };
+        };
+      };
+
       const message =
-        err?.response?.data?.message ||
-        err?.response?.data?.error ||
+        errorResponse?.response?.data?.message ||
+        errorResponse?.response?.data?.error ||
         "Unable to reset your password. The link may have expired.";
 
       setError(message);
@@ -296,7 +306,7 @@ const ResetPassword: React.FC = () => {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 placeholder="Enter new password"
-                onChange={(event) => {
+                onChange={(event: ChangeEvent<HTMLInputElement>) => {
                   setPassword(event.target.value);
 
                   setError("");
@@ -367,7 +377,7 @@ const ResetPassword: React.FC = () => {
               type={showConfirmPassword ? "text" : "password"}
               value={confirmPassword}
               placeholder="Confirm your password"
-              onChange={(event) => {
+              onChange={(event: ChangeEvent<HTMLInputElement>) => {
                 setConfirmPassword(event.target.value);
 
                 setError("");

@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import type { FC, ChangeEvent, FormEvent } from "react";
 import { CalendarDays, MapPin, User, Phone, Mail, Car } from "lucide-react";
 
-import Input from "../common/Input";
-import Button from "../common/Button";
+import Input from "../components/common/Input";
+import Button from "../components/common/Button";
 
 // =========================================================
 // TYPES
@@ -72,7 +73,7 @@ const getVehicleName = (vehicle: BookingFormVehicle): string => {
 // COMPONENT
 // =========================================================
 
-const BookingForm: React.FC<BookingFormProps> = ({
+const BookingForm: FC<BookingFormProps> = ({
   vehicle,
   initialValues,
   onSubmit,
@@ -82,26 +83,36 @@ const BookingForm: React.FC<BookingFormProps> = ({
   className = "",
 }) => {
   // =======================================================
-  // FORM STATE
+  // FORM STATE & PROP SYNC (RENDER-TIME ADJUSTMENT PATTERN)
   // =======================================================
 
   const [formData, setFormData] = useState<BookingFormData>({
     pickupDate: initialValues?.pickupDate || "",
-
     returnDate: initialValues?.returnDate || "",
-
     pickupLocation: initialValues?.pickupLocation || "",
-
     returnLocation: initialValues?.returnLocation || "",
-
     customerName: initialValues?.customerName || "",
-
     customerEmail: initialValues?.customerEmail || "",
-
     customerPhone: initialValues?.customerPhone || "",
-
     notes: initialValues?.notes || "",
   });
+
+  // Track initialValues changes during render to avoid useEffect cascading renders
+  const [prevInitialValues, setPrevInitialValues] = useState(initialValues);
+
+  if (initialValues !== prevInitialValues) {
+    setPrevInitialValues(initialValues);
+    setFormData({
+      pickupDate: initialValues?.pickupDate || "",
+      returnDate: initialValues?.returnDate || "",
+      pickupLocation: initialValues?.pickupLocation || "",
+      returnLocation: initialValues?.returnLocation || "",
+      customerName: initialValues?.customerName || "",
+      customerEmail: initialValues?.customerEmail || "",
+      customerPhone: initialValues?.customerPhone || "",
+      notes: initialValues?.notes || "",
+    });
+  }
 
   // =======================================================
   // ERRORS
@@ -112,26 +123,11 @@ const BookingForm: React.FC<BookingFormProps> = ({
   >({});
 
   // =======================================================
-  // UPDATE INITIAL VALUES
-  // =======================================================
-
-  useEffect(() => {
-    if (!initialValues) {
-      return;
-    }
-
-    setFormData((previous) => ({
-      ...previous,
-      ...initialValues,
-    }));
-  }, [initialValues]);
-
-  // =======================================================
   // CHANGE HANDLER
   // =======================================================
 
   const handleChange = (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = event.target;
 
@@ -155,29 +151,16 @@ const BookingForm: React.FC<BookingFormProps> = ({
   const validate = (): boolean => {
     const newErrors: Partial<Record<keyof BookingFormData, string>> = {};
 
-    // -------------------------------------------------------
-    // PICKUP DATE
-    // -------------------------------------------------------
-
     if (!formData.pickupDate) {
       newErrors.pickupDate = "Pickup date is required.";
     }
-
-    // -------------------------------------------------------
-    // RETURN DATE
-    // -------------------------------------------------------
 
     if (!formData.returnDate) {
       newErrors.returnDate = "Return date is required.";
     }
 
-    // -------------------------------------------------------
-    // DATE COMPARISON
-    // -------------------------------------------------------
-
     if (formData.pickupDate && formData.returnDate) {
       const pickup = new Date(`${formData.pickupDate}T00:00:00`);
-
       const returnDate = new Date(`${formData.returnDate}T00:00:00`);
 
       if (returnDate < pickup) {
@@ -189,25 +172,13 @@ const BookingForm: React.FC<BookingFormProps> = ({
       }
     }
 
-    // -------------------------------------------------------
-    // PICKUP LOCATION
-    // -------------------------------------------------------
-
     if (!formData.pickupLocation.trim()) {
       newErrors.pickupLocation = "Pickup location is required.";
     }
 
-    // -------------------------------------------------------
-    // RETURN LOCATION
-    // -------------------------------------------------------
-
     if (!formData.returnLocation.trim()) {
       newErrors.returnLocation = "Return location is required.";
     }
-
-    // -------------------------------------------------------
-    // CUSTOMER NAME
-    // -------------------------------------------------------
 
     if (!formData.customerName.trim()) {
       newErrors.customerName = "Name is required.";
@@ -215,19 +186,11 @@ const BookingForm: React.FC<BookingFormProps> = ({
       newErrors.customerName = "Name must contain at least 2 characters.";
     }
 
-    // -------------------------------------------------------
-    // EMAIL
-    // -------------------------------------------------------
-
     if (!formData.customerEmail.trim()) {
       newErrors.customerEmail = "Email is required.";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.customerEmail)) {
       newErrors.customerEmail = "Enter a valid email address.";
     }
-
-    // -------------------------------------------------------
-    // PHONE
-    // -------------------------------------------------------
 
     const cleanPhone = formData.customerPhone.replace(/\D/g, "");
 
@@ -236,10 +199,6 @@ const BookingForm: React.FC<BookingFormProps> = ({
     } else if (cleanPhone.length < 10) {
       newErrors.customerPhone = "Enter a valid phone number.";
     }
-
-    // -------------------------------------------------------
-    // SET ERRORS
-    // -------------------------------------------------------
 
     setErrors(newErrors);
 
@@ -250,7 +209,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
   // SUBMIT
   // =======================================================
 
-  const handleSubmit = async (event: React.FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
 
     const isValid = validate();
@@ -262,16 +221,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
     await onSubmit(formData);
   };
 
-  // =======================================================
-  // VEHICLE NAME
-  // =======================================================
-
   const vehicleName = getVehicleName(vehicle);
-
-  // =======================================================
-  // MIN DATE
-  // =======================================================
-
   const minimumDate = minDate || getToday();
 
   // =======================================================
@@ -292,31 +242,15 @@ const BookingForm: React.FC<BookingFormProps> = ({
         ${className}
       `}
     >
-      {/* =================================================
-          HEADER
-      ================================================== */}
-
       <div className="p-5 border-b border-gray-200">
         <div className="flex items-center gap-3">
-          <div
-            className="
-              w-11
-              h-11
-              rounded-xl
-              bg-blue-50
-              flex
-              items-center
-              justify-center
-            "
-          >
+          <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
             <Car className="w-5 h-5 text-blue-600" />
           </div>
-
           <div>
-            <h2 className="text-lg font-bold text-gray-900">
+            <h2 className="text-lg font-bold text-gray-950">
               Book {vehicleName}
             </h2>
-
             <p className="text-sm text-gray-500 mt-0.5">
               Enter your rental details
             </p>
@@ -324,19 +258,10 @@ const BookingForm: React.FC<BookingFormProps> = ({
         </div>
       </div>
 
-      {/* =================================================
-          FORM BODY
-      ================================================== */}
-
       <div className="p-5 space-y-7">
-        {/* =================================================
-            RENTAL DATES
-        ================================================== */}
-
         <section>
           <div className="flex items-center gap-2 mb-4">
             <CalendarDays className="w-5 h-5 text-blue-600" />
-
             <h3 className="font-semibold text-gray-900">Rental Dates</h3>
           </div>
 
@@ -365,14 +290,9 @@ const BookingForm: React.FC<BookingFormProps> = ({
           </div>
         </section>
 
-        {/* =================================================
-            LOCATIONS
-        ================================================== */}
-
         <section>
           <div className="flex items-center gap-2 mb-4">
             <MapPin className="w-5 h-5 text-blue-600" />
-
             <h3 className="font-semibold text-gray-900">
               Pickup & Return Location
             </h3>
@@ -403,14 +323,9 @@ const BookingForm: React.FC<BookingFormProps> = ({
           </div>
         </section>
 
-        {/* =================================================
-            CUSTOMER INFORMATION
-        ================================================== */}
-
         <section>
           <div className="flex items-center gap-2 mb-4">
             <User className="w-5 h-5 text-blue-600" />
-
             <h3 className="font-semibold text-gray-900">
               Customer Information
             </h3>
@@ -454,24 +369,13 @@ const BookingForm: React.FC<BookingFormProps> = ({
           </div>
         </section>
 
-        {/* =================================================
-            NOTES
-        ================================================== */}
-
         <section>
           <label
             htmlFor="booking-notes"
-            className="
-              block
-              mb-1.5
-              text-sm
-              font-medium
-              text-gray-700
-            "
+            className="block mb-1.5 text-sm font-medium text-gray-700"
           >
             Additional Notes
           </label>
-
           <textarea
             id="booking-notes"
             name="notes"
@@ -479,30 +383,9 @@ const BookingForm: React.FC<BookingFormProps> = ({
             onChange={handleChange}
             rows={4}
             placeholder="Any special requests or additional information..."
-            className="
-              w-full
-              rounded-lg
-              border
-              border-gray-300
-              bg-white
-              px-3
-              py-2.5
-              text-sm
-              text-gray-900
-              placeholder:text-gray-400
-              outline-none
-              resize-none
-              transition
-              focus:border-blue-500
-              focus:ring-2
-              focus:ring-blue-100
-            "
+            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 outline-none resize-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
           />
         </section>
-
-        {/* =================================================
-            SUBMIT
-        ================================================== */}
 
         <Button
           type="submit"

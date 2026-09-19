@@ -1,4 +1,5 @@
 import React from "react";
+import type { FC } from "react";
 import {
   CalendarDays,
   MapPin,
@@ -10,7 +11,7 @@ import {
 } from "lucide-react";
 
 import BookingStatus from "./BookingStatus";
-import Button from "../common/Button";
+import Button from "../components/common/Button";
 
 // =========================================================
 // TYPES
@@ -155,7 +156,7 @@ const getCustomer = (booking: Booking): BookingCardCustomer | null => {
 // COMPONENT
 // =========================================================
 
-const BookingCard: React.FC<BookingCardProps> = ({
+const BookingCard: FC<BookingCardProps> = ({
   booking,
   currency = "₹",
   onView,

@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Heart, Fuel, Users, Settings2, MapPin } from "lucide-react";
 import type { Vehicle } from "../types/vehicle";
 import { useAppDispatch, useAppSelector } from "../hooks/redux";
-import { toggleFavorite } from "../redux/favorite/favoriteSlice";
+import { addFavorite, removeFavorite } from "../redux/favorite/favoriteSlice";
 
 interface Props {
   vehicle: Vehicle;
@@ -10,10 +10,19 @@ interface Props {
 
 const VehicleCard = ({ vehicle }: Props) => {
   const dispatch = useAppDispatch();
-
-  const favorites = useAppSelector((state) => state.favorite.vehicleIds);
-
+  const favorites = useAppSelector((state) => state.favorite.favorites);
   const isFavorite = favorites.includes(vehicle._id);
+
+  const handleToggleFavorite = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (isFavorite) {
+      dispatch(removeFavorite(vehicle._id));
+    } else {
+      dispatch(addFavorite(vehicle._id));
+    }
+  };
 
   return (
     <div className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl">
@@ -28,8 +37,10 @@ const VehicleCard = ({ vehicle }: Props) => {
         />
 
         <button
-          onClick={() => dispatch(toggleFavorite(vehicle._id))}
-          className="absolute right-4 top-4 rounded-full bg-white/95 p-2.5 shadow"
+          type="button"
+          onClick={handleToggleFavorite}
+          aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+          className="absolute right-4 top-4 rounded-full bg-white/95 p-2.5 shadow transition hover:scale-105"
         >
           <Heart
             size={19}

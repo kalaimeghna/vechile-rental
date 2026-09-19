@@ -13,6 +13,7 @@ import {
   CalendarDays,
   ArrowRight,
   HeartOff,
+  SlidersHorizontal,
 } from "lucide-react";
 
 /* ============================================================
@@ -25,24 +26,16 @@ interface Vehicle {
   brand: string;
   model: string;
   year: number;
-
   image?: string;
-
   location: string;
-
   pricePerDay: number;
-
   rating: number;
   reviewCount: number;
-
   seats: number;
   fuelType: string;
   transmission: string;
-
   category: string;
-
   isAvailable: boolean;
-
   owner?: {
     _id: string;
     name: string;
@@ -61,118 +54,83 @@ const sampleFavorites: Vehicle[] = [
     brand: "Toyota",
     model: "Fortuner",
     year: 2025,
-
     image:
       "https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=1000&q=80",
-
     location: "Chennai, Tamil Nadu",
-
     pricePerDay: 3500,
-
     rating: 4.8,
     reviewCount: 124,
-
     seats: 7,
     fuelType: "Diesel",
     transmission: "Automatic",
-
     category: "SUV",
-
     isAvailable: true,
-
     owner: {
       _id: "owner-001",
       name: "Chennai Car Rentals",
     },
   },
-
   {
     _id: "vehicle-002",
     name: "Hyundai Creta",
     brand: "Hyundai",
     model: "Creta",
     year: 2024,
-
     image:
       "https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?auto=format&fit=crop&w=1000&q=80",
-
     location: "Chennai, Tamil Nadu",
-
     pricePerDay: 2500,
-
     rating: 4.6,
     reviewCount: 89,
-
     seats: 5,
     fuelType: "Petrol",
     transmission: "Automatic",
-
     category: "SUV",
-
     isAvailable: true,
-
     owner: {
       _id: "owner-002",
       name: "DriveEasy Rentals",
     },
   },
-
   {
     _id: "vehicle-003",
     name: "Honda City",
     brand: "Honda",
     model: "City",
     year: 2023,
-
     image:
       "https://images.unsplash.com/photo-1550355291-bbee04a92027?auto=format&fit=crop&w=1000&q=80",
-
     location: "Coimbatore, Tamil Nadu",
-
     pricePerDay: 2200,
-
     rating: 4.5,
     reviewCount: 76,
-
     seats: 5,
     fuelType: "Petrol",
     transmission: "Manual",
-
     category: "Sedan",
-
     isAvailable: true,
-
     owner: {
       _id: "owner-003",
       name: "Coimbatore Rentals",
     },
   },
-
   {
     _id: "vehicle-004",
     name: "Mahindra Thar",
     brand: "Mahindra",
     model: "Thar",
     year: 2025,
-
     image:
       "https://images.unsplash.com/photo-1625047509248-ec889cbff17f?auto=format&fit=crop&w=1000&q=80",
-
     location: "Bangalore, Karnataka",
-
     pricePerDay: 3000,
-
     rating: 4.9,
     reviewCount: 152,
-
     seats: 4,
     fuelType: "Diesel",
     transmission: "Manual",
-
     category: "SUV",
-
     isAvailable: false,
-
     owner: {
       _id: "owner-004",
       name: "Urban Drive",
@@ -198,13 +156,9 @@ const formatPrice = (price: number): string => {
 
 export default function Favorites() {
   const [favorites, setFavorites] = useState<Vehicle[]>(sampleFavorites);
-
   const [search, setSearch] = useState("");
-
   const [category, setCategory] = useState("All");
-
   const [sortBy, setSortBy] = useState("recent");
-
   const [removingId, setRemovingId] = useState<string | null>(null);
 
   /* ==========================================================
@@ -213,7 +167,6 @@ export default function Favorites() {
 
   const categories = useMemo(() => {
     const values = favorites.map((vehicle) => vehicle.category);
-
     return ["All", ...Array.from(new Set(values))];
   }, [favorites]);
 
@@ -261,11 +214,9 @@ export default function Favorites() {
       setRemovingId(vehicleId);
 
       /*
-        Connect backend here later:
+         Connect backend here later:
 
-        await axiosInstance.delete(
-          `/favorites/${vehicleId}`
-        );
+         await axiosInstance.delete(`/favorites/${vehicleId}`);
       */
 
       await new Promise((resolve) => setTimeout(resolve, 300));
@@ -286,11 +237,10 @@ export default function Favorites() {
 
   const handleViewVehicle = (vehicleId: string) => {
     /*
-      With React Router:
+       With React Router:
 
-      navigate(`/vehicles/${vehicleId}`);
+       navigate(`/vehicles/${vehicleId}`);
     */
-
     console.log("View vehicle:", vehicleId);
   };
 
@@ -300,13 +250,10 @@ export default function Favorites() {
 
   const handleBookVehicle = (vehicleId: string) => {
     /*
-      With React Router:
+       With React Router:
 
-      navigate(
-        `/vehicles/${vehicleId}/book`
-      );
+       navigate(`/vehicles/${vehicleId}/book`);
     */
-
     console.log("Book vehicle:", vehicleId);
   };
 
@@ -331,7 +278,6 @@ export default function Favorites() {
               <h1 className="text-3xl font-black text-slate-900">
                 My Favorites
               </h1>
-
               <p className="mt-1 text-sm text-slate-500">
                 {favorites.length}{" "}
                 {favorites.length === 1 ? "vehicle" : "vehicles"} saved
@@ -348,13 +294,11 @@ export default function Favorites() {
           <div className="mb-7 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="grid gap-3 md:grid-cols-[1fr_auto_auto]">
               {/* Search */}
-
               <div className="relative">
                 <Search
                   size={18}
                   className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
                 />
-
                 <input
                   type="text"
                   value={search}
@@ -365,7 +309,6 @@ export default function Favorites() {
               </div>
 
               {/* Category */}
-
               <div className="relative">
                 <select
                   value={category}
@@ -378,26 +321,21 @@ export default function Favorites() {
                     </option>
                   ))}
                 </select>
-
-                <Filter
+                <SlidersHorizontal
                   size={16}
                   className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
                 />
               </div>
 
               {/* Sort */}
-
               <select
                 value={sortBy}
                 onChange={(event) => setSortBy(event.target.value)}
                 className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 outline-none focus:border-blue-500"
               >
                 <option value="recent">Recently Added</option>
-
                 <option value="price-low">Price: Low to High</option>
-
                 <option value="price-high">Price: High to Low</option>
-
                 <option value="rating">Highest Rated</option>
               </select>
             </div>
@@ -417,7 +355,6 @@ export default function Favorites() {
             <h2 className="mt-6 text-2xl font-black text-slate-800">
               No favorite vehicles
             </h2>
-
             <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-400">
               You haven't added any vehicles to your favorites yet. Browse
               vehicles and tap the heart icon to save them.
@@ -447,7 +384,6 @@ export default function Favorites() {
             <h2 className="mt-5 text-xl font-black text-slate-800">
               No vehicles found
             </h2>
-
             <p className="mt-2 text-sm text-slate-400">
               Try changing your search or category filter.
             </p>
@@ -469,8 +405,8 @@ export default function Favorites() {
                   className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
                 >
                   {/* ======================================
-                        IMAGE
-                    ======================================= */}
+                      IMAGE
+                  ======================================= */}
 
                   <div className="relative h-56 overflow-hidden bg-slate-100">
                     {vehicle.image ? (
@@ -486,14 +422,12 @@ export default function Favorites() {
                     )}
 
                     {/* Overlay */}
-
                     <div className="absolute inset-x-0 top-0 flex items-start justify-between p-4">
                       <span className="rounded-full bg-white/95 px-3 py-1.5 text-xs font-black text-slate-700 shadow-sm">
                         {vehicle.category}
                       </span>
 
                       {/* Remove */}
-
                       <button
                         type="button"
                         title="Remove from favorites"
@@ -510,7 +444,6 @@ export default function Favorites() {
                     </div>
 
                     {/* Availability */}
-
                     <div className="absolute bottom-4 left-4">
                       {vehicle.isAvailable ? (
                         <span className="rounded-full bg-green-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm">
@@ -525,31 +458,27 @@ export default function Favorites() {
                   </div>
 
                   {/* ======================================
-                        CONTENT
-                    ======================================= */}
+                      CONTENT
+                  ======================================= */}
 
                   <div className="p-5">
                     {/* Vehicle name */}
-
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <h2 className="text-xl font-black text-slate-900">
                           {vehicle.name}
                         </h2>
-
                         <p className="mt-1 text-sm text-slate-500">
                           {vehicle.brand} {vehicle.model} • {vehicle.year}
                         </p>
                       </div>
 
                       {/* Rating */}
-
                       <div className="flex items-center gap-1 rounded-lg bg-yellow-50 px-2 py-1">
                         <Star
                           size={14}
                           className="fill-yellow-400 text-yellow-400"
                         />
-
                         <span className="text-xs font-black text-yellow-700">
                           {vehicle.rating}
                         </span>
@@ -561,19 +490,15 @@ export default function Favorites() {
                     </p>
 
                     {/* Location */}
-
                     <div className="mt-4 flex items-center gap-2 text-sm text-slate-500">
                       <MapPin size={16} className="shrink-0 text-blue-500" />
-
                       <span className="truncate">{vehicle.location}</span>
                     </div>
 
                     {/* Specifications */}
-
                     <div className="mt-5 grid grid-cols-3 gap-2 border-y border-slate-100 py-4">
                       <div className="flex flex-col items-center gap-1 text-center">
                         <Users size={17} className="text-slate-400" />
-
                         <span className="text-xs font-semibold text-slate-600">
                           {vehicle.seats} Seats
                         </span>
@@ -581,7 +506,6 @@ export default function Favorites() {
 
                       <div className="flex flex-col items-center gap-1 border-x border-slate-100 text-center">
                         <Fuel size={17} className="text-slate-400" />
-
                         <span className="text-xs font-semibold text-slate-600">
                           {vehicle.fuelType}
                         </span>
@@ -589,7 +513,6 @@ export default function Favorites() {
 
                       <div className="flex flex-col items-center gap-1 text-center">
                         <Settings2 size={17} className="text-slate-400" />
-
                         <span className="text-xs font-semibold text-slate-600">
                           {vehicle.transmission}
                         </span>
@@ -597,13 +520,11 @@ export default function Favorites() {
                     </div>
 
                     {/* Price */}
-
                     <div className="mt-4 flex items-end justify-between">
                       <div>
                         <span className="text-2xl font-black text-slate-900">
                           {formatPrice(vehicle.pricePerDay)}
                         </span>
-
                         <span className="ml-1 text-xs text-slate-400">
                           / day
                         </span>
@@ -611,7 +532,6 @@ export default function Favorites() {
                     </div>
 
                     {/* Buttons */}
-
                     <div className="mt-5 grid grid-cols-2 gap-3">
                       <button
                         type="button"
@@ -634,7 +554,6 @@ export default function Favorites() {
                     </div>
 
                     {/* Remove */}
-
                     <button
                       type="button"
                       onClick={() => handleRemoveFavorite(vehicle._id)}
@@ -642,7 +561,6 @@ export default function Favorites() {
                       className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl py-2 text-xs font-bold text-red-500 transition hover:bg-red-50 disabled:opacity-50"
                     >
                       <Trash2 size={14} />
-
                       {isRemoving ? "Removing..." : "Remove from Favorites"}
                     </button>
                   </div>

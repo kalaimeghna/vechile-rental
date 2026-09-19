@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from "react";
 import {
-  Bell,
   Check,
   CheckCheck,
   Trash2,
@@ -9,7 +8,6 @@ import {
   CreditCard,
   AlertCircle,
   MessageSquare,
-  X,
   Settings,
 } from "lucide-react";
 
@@ -102,15 +100,10 @@ const defaultNotifications: Notification[] = [
 
 interface NotificationsProps {
   notifications?: Notification[];
-
   onNotificationClick?: (notification: Notification) => void;
-
   onMarkAsRead?: (notificationId: string) => Promise<void> | void;
-
   onDelete?: (notificationId: string) => Promise<void> | void;
-
   onMarkAllAsRead?: () => Promise<void> | void;
-
   onClearAll?: () => Promise<void> | void;
 }
 
@@ -126,15 +119,10 @@ const formatNotificationTime = (dateString: string): string => {
   }
 
   const now = new Date();
-
   const difference = now.getTime() - date.getTime();
-
   const seconds = Math.floor(difference / 1000);
-
   const minutes = Math.floor(seconds / 60);
-
   const hours = Math.floor(minutes / 60);
-
   const days = Math.floor(hours / 24);
 
   if (seconds < 60) {
@@ -168,19 +156,14 @@ const NotificationIcon = ({ type }: { type: NotificationType }) => {
   switch (type) {
     case "booking":
       return <CalendarCheck size={20} />;
-
     case "payment":
       return <CreditCard size={20} />;
-
     case "vehicle":
       return <Car size={20} />;
-
     case "message":
       return <MessageSquare size={20} />;
-
     case "alert":
       return <AlertCircle size={20} />;
-
     case "system":
     default:
       return <Settings size={20} />;
@@ -195,19 +178,14 @@ const getIconStyle = (type: NotificationType): string => {
   switch (type) {
     case "booking":
       return "bg-blue-50 text-blue-600";
-
     case "payment":
       return "bg-green-50 text-green-600";
-
     case "vehicle":
       return "bg-purple-50 text-purple-600";
-
     case "message":
       return "bg-orange-50 text-orange-600";
-
     case "alert":
       return "bg-red-50 text-red-600";
-
     case "system":
     default:
       return "bg-slate-100 text-slate-600";
@@ -219,24 +197,17 @@ const getIconStyle = (type: NotificationType): string => {
 ============================================================ */
 
 export default function Notifications({
-  notifications: initialNotifications = defaultNotifications,
+  notifications = defaultNotifications,
   onNotificationClick,
   onMarkAsRead,
   onDelete,
   onMarkAllAsRead,
   onClearAll,
 }: NotificationsProps) {
-  const [notifications, setNotifications] =
-    useState<Notification[]>(initialNotifications);
-
   const [activeFilter, setActiveFilter] = useState<"all" | "unread">("all");
-
   const [deletingId, setDeletingId] = useState<string | null>(null);
-
   const [markingId, setMarkingId] = useState<string | null>(null);
-
   const [isMarkingAll, setIsMarkingAll] = useState(false);
-
   const [isClearingAll, setIsClearingAll] = useState(false);
 
   /* ==========================================================
@@ -255,7 +226,6 @@ export default function Notifications({
     if (activeFilter === "unread") {
       return notifications.filter((notification) => !notification.isRead);
     }
-
     return notifications;
   }, [notifications, activeFilter]);
 
@@ -274,19 +244,7 @@ export default function Notifications({
 
     try {
       setMarkingId(notificationId);
-
       await onMarkAsRead?.(notificationId);
-
-      setNotifications((previous) =>
-        previous.map((item) =>
-          item._id === notificationId
-            ? {
-                ...item,
-                isRead: true,
-              }
-            : item,
-        ),
-      );
     } catch (error) {
       console.error("Failed to mark notification as read:", error);
     } finally {
@@ -302,7 +260,6 @@ export default function Notifications({
     if (!notification.isRead) {
       await handleMarkAsRead(notification._id);
     }
-
     onNotificationClick?.(notification);
   };
 
@@ -317,15 +274,7 @@ export default function Notifications({
 
     try {
       setIsMarkingAll(true);
-
       await onMarkAllAsRead?.();
-
-      setNotifications((previous) =>
-        previous.map((notification) => ({
-          ...notification,
-          isRead: true,
-        })),
-      );
     } catch (error) {
       console.error("Failed to mark all notifications:", error);
     } finally {
@@ -340,12 +289,7 @@ export default function Notifications({
   const handleDelete = async (notificationId: string) => {
     try {
       setDeletingId(notificationId);
-
       await onDelete?.(notificationId);
-
-      setNotifications((previous) =>
-        previous.filter((notification) => notification._id !== notificationId),
-      );
     } catch (error) {
       console.error("Failed to delete notification:", error);
     } finally {
@@ -364,10 +308,7 @@ export default function Notifications({
 
     try {
       setIsClearingAll(true);
-
       await onClearAll?.();
-
-      setNotifications([]);
     } catch (error) {
       console.error("Failed to clear notifications:", error);
     } finally {
@@ -382,18 +323,12 @@ export default function Notifications({
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl">
-        {/* ====================================================
-            HEADER
-        ===================================================== */}
-
+        {/* HEADER */}
         <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-            {/* Title */}
-
             <div className="flex items-center gap-4">
               <div className="relative flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-                <Bell size={23} />
-
+                <Settings size={23} />
                 {unreadCount > 0 && (
                   <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-black text-white">
                     {unreadCount > 99 ? "99+" : unreadCount}
@@ -405,18 +340,13 @@ export default function Notifications({
                 <h1 className="text-2xl font-black text-slate-900">
                   Notifications
                 </h1>
-
                 <p className="mt-1 text-sm text-slate-500">
                   {unreadCount > 0
-                    ? `You have ${unreadCount} unread ${
-                        unreadCount === 1 ? "notification" : "notifications"
-                      }.`
+                    ? `You have ${unreadCount} unread ${unreadCount === 1 ? "notification" : "notifications"}.`
                     : "You're all caught up."}
                 </p>
               </div>
             </div>
-
-            {/* Actions */}
 
             {notifications.length > 0 && (
               <div className="flex flex-wrap gap-2">
@@ -428,7 +358,6 @@ export default function Notifications({
                     className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
                   >
                     <CheckCheck size={15} />
-
                     {isMarkingAll ? "Marking..." : "Mark all read"}
                   </button>
                 )}
@@ -440,72 +369,50 @@ export default function Notifications({
                   className="flex items-center gap-2 rounded-lg border border-red-100 px-3 py-2 text-xs font-bold text-red-500 transition hover:bg-red-50 disabled:opacity-50"
                 >
                   <Trash2 size={15} />
-
                   {isClearingAll ? "Clearing..." : "Clear all"}
                 </button>
               </div>
             )}
           </div>
 
-          {/* ==================================================
-              FILTERS
-          =================================================== */}
-
+          {/* FILTERS */}
           <div className="mt-6 flex gap-2 border-t border-slate-100 pt-5">
             <button
               type="button"
               onClick={() => setActiveFilter("all")}
-              className={`
-                rounded-lg px-4 py-2
-                text-sm font-bold
-                transition
-                ${
-                  activeFilter === "all"
-                    ? "bg-blue-600 text-white"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }
-              `}
+              className={`rounded-lg px-4 py-2 text-sm font-bold transition ${
+                activeFilter === "all"
+                  ? "bg-blue-600 text-white"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              }`}
             >
-              All
+              All{" "}
               <span className="ml-2 opacity-70">{notifications.length}</span>
             </button>
 
             <button
               type="button"
               onClick={() => setActiveFilter("unread")}
-              className={`
-                rounded-lg px-4 py-2
-                text-sm font-bold
-                transition
-                ${
-                  activeFilter === "unread"
-                    ? "bg-blue-600 text-white"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }
-              `}
+              className={`rounded-lg px-4 py-2 text-sm font-bold transition ${
+                activeFilter === "unread"
+                  ? "bg-blue-600 text-white"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              }`}
             >
-              Unread
-              <span className="ml-2 opacity-70">{unreadCount}</span>
+              Unread <span className="ml-2 opacity-70">{unreadCount}</span>
             </button>
           </div>
         </div>
 
-        {/* ====================================================
-            NOTIFICATION LIST
-        ===================================================== */}
-
+        {/* NOTIFICATION LIST */}
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           {filteredNotifications.length === 0 ? (
-            /* ==================================================
-               EMPTY STATE
-            =================================================== */
-
             <div className="px-6 py-16 text-center">
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-slate-400">
                 {activeFilter === "unread" ? (
                   <CheckCheck size={28} />
                 ) : (
-                  <Bell size={28} />
+                  <Settings size={28} />
                 )}
               </div>
 
@@ -522,54 +429,33 @@ export default function Notifications({
               </p>
             </div>
           ) : (
-            /* ==================================================
-               LIST
-            =================================================== */
-
             <div className="divide-y divide-slate-100">
               {filteredNotifications.map((notification) => {
                 const isDeleting = deletingId === notification._id;
-
                 const isMarking = markingId === notification._id;
 
                 return (
                   <div
                     key={notification._id}
-                    className={`
-                        group relative
-                        flex gap-4 p-5
-                        transition
-                        sm:p-6
-                        ${
-                          notification.isRead
-                            ? "bg-white hover:bg-slate-50"
-                            : "bg-blue-50/50 hover:bg-blue-50"
-                        }
-                      `}
+                    className={`group relative flex gap-4 p-5 transition sm:p-6 ${
+                      notification.isRead
+                        ? "bg-white hover:bg-slate-50"
+                        : "bg-blue-50/50 hover:bg-blue-50"
+                    }`}
                   >
-                    {/* Unread indicator */}
-
                     {!notification.isRead && (
                       <span className="absolute left-0 top-0 h-full w-1 bg-blue-600" />
                     )}
 
-                    {/* Icon */}
-
                     <button
                       type="button"
                       onClick={() => handleNotificationClick(notification)}
-                      className={`
-                          flex h-11 w-11
-                          shrink-0 items-center
-                          justify-center
-                          rounded-xl
-                          ${getIconStyle(notification.type)}
-                        `}
+                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${getIconStyle(
+                        notification.type,
+                      )}`}
                     >
                       <NotificationIcon type={notification.type} />
                     </button>
-
-                    {/* Content */}
 
                     <button
                       type="button"
@@ -578,14 +464,11 @@ export default function Notifications({
                     >
                       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                         <h3
-                          className={`
-                              truncate text-sm
-                              ${
-                                notification.isRead
-                                  ? "font-bold text-slate-700"
-                                  : "font-black text-slate-900"
-                              }
-                            `}
+                          className={`truncate text-sm ${
+                            notification.isRead
+                              ? "font-bold text-slate-700"
+                              : "font-black text-slate-900"
+                          }`}
                         >
                           {notification.title}
                         </h3>
@@ -606,11 +489,7 @@ export default function Notifications({
                       )}
                     </button>
 
-                    {/* Actions */}
-
                     <div className="flex shrink-0 items-start gap-1">
-                      {/* Mark Read */}
-
                       {!notification.isRead && (
                         <button
                           type="button"
@@ -626,8 +505,6 @@ export default function Notifications({
                           )}
                         </button>
                       )}
-
-                      {/* Delete */}
 
                       <button
                         type="button"

@@ -1,11 +1,5 @@
 import React, { useMemo, useState } from "react";
-import {
-  Star,
-  ThumbsUp,
-  User,
-  CheckCircle2,
-  MessageSquare,
-} from "lucide-react";
+import { Star, ThumbsUp, CheckCircle2, MessageSquare } from "lucide-react";
 
 interface Review {
   _id: string;
@@ -22,9 +16,7 @@ interface Review {
 }
 
 interface ReviewsProps {
-  vehicleId?: string;
   reviews?: Review[];
-  currentUserId?: string;
   isLoggedIn?: boolean;
   onSubmitReview?: (data: {
     rating: number;
@@ -132,7 +124,7 @@ const StarRating = ({
               type="button"
               onClick={() => onChange?.(star)}
               aria-label={`Rate ${star} star${star > 1 ? "s" : ""}`}
-              className="rounded p-0.5 transition hover:scale-110"
+              className="rounded p-0.5 transition hover:scale-110 focus:outline-none focus:ring-2 focus:ring-yellow-400"
             >
               <Star
                 size={size}
@@ -157,33 +149,18 @@ const StarRating = ({
 };
 
 export default function Reviews({
-  vehicleId,
   reviews = DEFAULT_REVIEWS,
-  currentUserId,
   isLoggedIn = false,
   onSubmitReview,
   onHelpful,
 }: ReviewsProps) {
   const [rating, setRating] = useState<number>(0);
-
   const [comment, setComment] = useState<string>("");
-
   const [error, setError] = useState<string>("");
-
   const [submitting, setSubmitting] = useState<boolean>(false);
-
   const [helpfulReviews, setHelpfulReviews] = useState<Set<string>>(new Set());
-
-  const [helpfulCounts, setHelpfulCounts] = useState<Record<string, number>>(
-    () => {
-      const counts: Record<string, number> = {};
-
-      reviews.forEach((review) => {
-        counts[review._id] = review.helpfulCount || 0;
-      });
-
-      return counts;
-    },
+  const [helpfulDeltas, setHelpfulDeltas] = useState<Record<string, number>>(
+    {},
   );
 
   /*
@@ -208,12 +185,13 @@ export default function Reviews({
     }
 
     const total = reviews.length;
-
-    const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
-
+    const totalRating = reviews.reduce(
+      (sum, review) => sum + (review.rating || 0),
+      0,
+    );
     const average = totalRating / total;
 
-    const counts = {
+    const counts: Record<number, number> = {
       5: 0,
       4: 0,
       3: 0,
@@ -225,7 +203,7 @@ export default function Reviews({
       const reviewRating = Math.round(review.rating);
 
       if (reviewRating >= 1 && reviewRating <= 5) {
-        counts[reviewRating as keyof typeof counts]++;
+        counts[reviewRating]++;
       }
     });
 
@@ -250,7 +228,6 @@ export default function Reviews({
 
   const handleSubmitReview = async (event: React.FormEvent) => {
     event.preventDefault();
-
     setError("");
 
     if (!isLoggedIn) {
@@ -290,7 +267,6 @@ export default function Reviews({
       setComment("");
     } catch (submitError) {
       console.error("Failed to submit review:", submitError);
-
       setError("Unable to submit review. Please try again.");
     } finally {
       setSubmitting(false);
@@ -318,13 +294,11 @@ export default function Reviews({
 
       setHelpfulReviews((previous) => {
         const updated = new Set(previous);
-
         updated.add(reviewId);
-
         return updated;
       });
 
-      setHelpfulCounts((previous) => ({
+      setHelpfulDeltas((previous) => ({
         ...previous,
         [reviewId]: (previous[reviewId] || 0) + 1,
       }));
@@ -361,8 +335,6 @@ export default function Reviews({
       ====================================================== */}
 
       <div className="mb-8 grid gap-6 border-b border-slate-100 pb-8 md:grid-cols-[180px_1fr]">
-        {/* Average */}
-
         <div className="flex flex-col items-center justify-center rounded-2xl bg-slate-50 p-5 text-center">
           <p className="text-5xl font-black text-slate-900">
             {statistics.average.toFixed(1)}
@@ -380,8 +352,6 @@ export default function Reviews({
             {statistics.total} {statistics.total === 1 ? "review" : "reviews"}
           </p>
         </div>
-
-        {/* Rating Bars */}
 
         <div className="flex flex-col justify-center gap-3">
           {([5, 4, 3, 2, 1] as const).map((value) => (
@@ -433,8 +403,6 @@ export default function Reviews({
           </div>
         ) : (
           <form onSubmit={handleSubmitReview}>
-            {/* Rating */}
-
             <div className="mb-5">
               <label className="mb-2 block text-sm font-bold text-slate-700">
                 Your Rating
@@ -455,8 +423,6 @@ export default function Reviews({
                 )}
               </div>
             </div>
-
-            {/* Comment */}
 
             <div className="mb-4">
               <label
@@ -483,15 +449,11 @@ export default function Reviews({
               </div>
             </div>
 
-            {/* Error */}
-
             {error && (
               <div className="mb-4 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
                 {error}
               </div>
             )}
-
-            {/* Submit */}
 
             <button
               type="submit"
@@ -533,14 +495,12 @@ export default function Reviews({
           <div className="divide-y divide-slate-100">
             {reviews.map((review) => {
               const isHelpful = helpfulReviews.has(review._id);
-
-              const helpfulCount =
-                helpfulCounts[review._id] ?? review.helpfulCount ?? 0;
+              const baseCount = review.helpfulCount || 0;
+              const delta = helpfulDeltas[review._id] || 0;
+              const helpfulCount = baseCount + delta;
 
               return (
                 <article key={review._id} className="py-6 first:pt-0 last:pb-0">
-                  {/* User */}
-
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-center gap-3">
                       {review.user.profilePicture ? (
@@ -578,13 +538,9 @@ export default function Reviews({
                     <StarRating rating={review.rating} size={16} />
                   </div>
 
-                  {/* Comment */}
-
                   <p className="mt-4 text-sm leading-6 text-slate-600">
                     {review.comment}
                   </p>
-
-                  {/* Helpful */}
 
                   <div className="mt-4">
                     <button
