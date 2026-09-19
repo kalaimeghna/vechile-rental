@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   IndianRupee,
   TrendingUp,
@@ -15,12 +15,12 @@ import {
 } from "lucide-react";
 
 /* ============================================================
-    TYPES
+   TYPES
 ============================================================ */
 
-type TransactionStatus = "completed" | "pending" | "refunded";
+export type TransactionStatus = "completed" | "pending" | "refunded";
 
-interface Transaction {
+export interface Transaction {
   _id: string;
   bookingId: string;
   vehicleName: string;
@@ -33,41 +33,23 @@ interface Transaction {
   paymentMethod: string;
 }
 
-interface MonthlyEarning {
+export interface MonthlyEarning {
   month: string;
   amount: number;
 }
 
 /* ============================================================
-    SAMPLE DATA
-    Replace with backend API data later.
+   SAMPLE DATA
+   Replace with backend API data later.
 ============================================================ */
 
 const monthlyEarnings: MonthlyEarning[] = [
-  {
-    month: "Mar",
-    amount: 42000,
-  },
-  {
-    month: "Apr",
-    amount: 58000,
-  },
-  {
-    month: "May",
-    amount: 51000,
-  },
-  {
-    month: "Jun",
-    amount: 69000,
-  },
-  {
-    month: "Jul",
-    amount: 75000,
-  },
-  {
-    month: "Aug",
-    amount: 92000,
-  },
+  { month: "Mar", amount: 42000 },
+  { month: "Apr", amount: 58000 },
+  { month: "May", amount: 51000 },
+  { month: "Jun", amount: 69000 },
+  { month: "Jul", amount: 75000 },
+  { month: "Aug", amount: 92000 },
 ];
 
 const sampleTransactions: Transaction[] = [
@@ -134,7 +116,7 @@ const sampleTransactions: Transaction[] = [
 ];
 
 /* ============================================================
-    HELPERS
+   HELPERS
 ============================================================ */
 
 const formatPrice = (amount: number): string => {
@@ -147,11 +129,9 @@ const formatPrice = (amount: number): string => {
 
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
-
   if (Number.isNaN(date.getTime())) {
     return "N/A";
   }
-
   return date.toLocaleDateString("en-IN", {
     day: "2-digit",
     month: "short",
@@ -160,7 +140,7 @@ const formatDate = (dateString: string): string => {
 };
 
 /* ============================================================
-    STATUS BADGE
+   STATUS BADGE COMPONENT
 ============================================================ */
 
 const StatusBadge = ({ status }: { status: TransactionStatus }) => {
@@ -191,7 +171,7 @@ const StatusBadge = ({ status }: { status: TransactionStatus }) => {
 };
 
 /* ============================================================
-    MAIN COMPONENT
+   MAIN COMPONENT
 ============================================================ */
 
 export default function Earnings() {

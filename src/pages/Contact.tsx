@@ -1,4 +1,4 @@
-import React, { useState, type FormEvent, type ChangeEvent } from "react";
+import { useState, type FormEvent, type ChangeEvent } from "react";
 import axios, { type AxiosError } from "axios";
 
 export default function Contact() {

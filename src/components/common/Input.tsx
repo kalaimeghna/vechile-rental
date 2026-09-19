@@ -1,4 +1,4 @@
-import React, { forwardRef, useState } from "react";
+import { forwardRef, useState } from "react";
 import type { InputHTMLAttributes, ReactNode } from "react";
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
 

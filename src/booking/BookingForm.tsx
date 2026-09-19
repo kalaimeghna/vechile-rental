@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import type { FC, ChangeEvent, FormEvent } from "react";
 import { CalendarDays, MapPin, User, Phone, Mail, Car } from "lucide-react";
 
